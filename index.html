@@ -31,6 +31,7 @@
     --shadow: 0 8px 24px rgba(180, 130, 160, 0.18);
   }
   *{box-sizing:border-box;}
+  input[type=text]{ -webkit-appearance:none; appearance:none; line-height:1.35; }
   body{
     margin:0;
     font-family:'Noto Sans TC', sans-serif;
@@ -168,6 +169,12 @@
     border-radius:10px;
     padding:6px 4px;
     text-align:center;
+    position:relative;
+  }
+  .hcell .h-dot{
+    position:absolute; top:3px; right:3px;
+    width:11px; height:11px; border-radius:50%; cursor:pointer;
+    border:1.5px solid rgba(255,255,255,0.9); box-shadow:0 0 0 1px rgba(0,0,0,0.1);
   }
   .hcell input{
     width:100%; text-align:center; border:none; background:transparent;
@@ -295,6 +302,10 @@
     grid-column: 1 / -1;
     display:flex; align-items:center; justify-content:center; gap:10px;
     background:var(--pink-light); border-radius:10px; padding:5px 8px;
+  }
+  .break-row .b-dot{
+    width:13px; height:13px; border-radius:50%; cursor:pointer; flex:none;
+    border:2px solid rgba(255,255,255,0.9); box-shadow:0 0 0 1px rgba(0,0,0,0.1);
   }
   .break-row input.blabel{
     border:none; background:transparent; font-weight:700; font-size:calc(12px * var(--fs)); color:var(--pink-deep);
@@ -495,6 +506,8 @@ function defaultCard(){
     periodTimes: {1:'8:40~9:20',2:'9:30~10:10',3:'10:30~11:10',4:'11:20~12:00',5:'13:10~13:50',6:'14:00~14:40',7:'14:50~15:30'},
     breaksA: [ {label:'午餐、潔牙', time:'12:00~12:30'}, {label:'午休時間', time:'12:30~13:05'} ],
     breaksB: [ {label:'整潔時間', time:'15:30~15:50'}, {label:'降旗放學', time:'15:50~16:00'} ],
+    headerColors: { period: null, time: null, days: {0:null,1:null,2:null,3:null,4:null} },
+    breakColors: { breaksA: [null, null], breaksB: [null, null] },
     cells,
     notes: {
       highlights: {0:'',1:'',2:'',3:'',4:''},
@@ -570,6 +583,14 @@ function normalizeCard(c){
   c.notes.equipment = c.notes.equipment || '';
   c.notes.links = c.notes.links || [];
   c.notes.todos = c.notes.todos || [];
+  c.headerColors = c.headerColors || {};
+  if(c.headerColors.period === undefined) c.headerColors.period = null;
+  if(c.headerColors.time === undefined) c.headerColors.time = null;
+  c.headerColors.days = c.headerColors.days || {};
+  [0,1,2,3,4].forEach(d=>{ if(c.headerColors.days[d] === undefined) c.headerColors.days[d] = null; });
+  c.breakColors = c.breakColors || {};
+  c.breakColors.breaksA = c.breakColors.breaksA || [null, null];
+  c.breakColors.breaksB = c.breakColors.breaksB || [null, null];
   if(c.cells){
     Object.keys(c.cells).forEach(n=>{
       Object.keys(c.cells[n]).forEach(d=>{
@@ -732,8 +753,10 @@ function periodRowHTML(card, n){
 
 function breakRowHTML(card, group, idx){
   const b = card[group][idx];
+  const bg = (card.breakColors && card.breakColors[group] && card.breakColors[group][idx]) || 'var(--pink-light)';
   return `
-  <div class="break-row">
+  <div class="break-row" style="background:${bg}">
+    <span class="b-dot" style="background:${bg}" data-role="breakcolor" data-card="${card.id}" data-group="${group}" data-idx="${idx}"></span>
     <input class="blabel" type="text" value="${escapeAttr(b.label)}" data-role="breaklabel" data-card="${card.id}" data-group="${group}" data-idx="${idx}">
     <input class="btime" type="text" value="${escapeAttr(b.time)}" data-role="breaktime" data-card="${card.id}" data-group="${group}" data-idx="${idx}">
   </div>`;
@@ -805,10 +828,13 @@ function todosSection(card){
 
 function cardHTML(card){
   let gridRows = '';
-  gridRows += `<div class="hcell"><input type="text" value="${escapeAttr(card.colLabels.period)}" data-role="collabel" data-card="${card.id}" data-key="period"></div>`;
-  gridRows += `<div class="hcell"><input type="text" value="${escapeAttr(card.colLabels.time)}" data-role="collabel" data-card="${card.id}" data-key="time"></div>`;
+  const periodBg = card.headerColors.period || 'var(--pink-light)';
+  const timeBg = card.headerColors.time || 'var(--pink-light)';
+  gridRows += `<div class="hcell" style="background:${periodBg}"><span class="h-dot" style="background:${periodBg}" data-role="hcolor" data-card="${card.id}" data-key="period"></span><input type="text" value="${escapeAttr(card.colLabels.period)}" data-role="collabel" data-card="${card.id}" data-key="period"></div>`;
+  gridRows += `<div class="hcell" style="background:${timeBg}"><span class="h-dot" style="background:${timeBg}" data-role="hcolor" data-card="${card.id}" data-key="time"></span><input type="text" value="${escapeAttr(card.colLabels.time)}" data-role="collabel" data-card="${card.id}" data-key="time"></div>`;
   card.days.forEach((day,d)=>{
-    gridRows += `<div class="hcell"><input type="text" value="${escapeAttr(day)}" data-role="daylabel" data-card="${card.id}" data-day="${d}"></div>`;
+    const dayBg = card.headerColors.days[d] || 'var(--pink-light)';
+    gridRows += `<div class="hcell" style="background:${dayBg}"><span class="h-dot" style="background:${dayBg}" data-role="hcolor-day" data-card="${card.id}" data-day="${d}"></span><input type="text" value="${escapeAttr(day)}" data-role="daylabel" data-card="${card.id}" data-day="${d}"></div>`;
   });
 
   [1,2,3,4].forEach(n=>{ gridRows += periodRowHTML(card, n); });
@@ -944,6 +970,24 @@ document.getElementById('cardsWrap').addEventListener('click', (e)=>{
     return;
   }
   if(role === 'cellstyle'){ e.stopPropagation(); openCellStylePopover(t, cardId, t.dataset.period, t.dataset.day); return; }
+  if(role === 'hcolor'){
+    e.stopPropagation();
+    const key = t.dataset.key;
+    openSimpleColorPopover(t, card.headerColors[key], (c)=>{ card.headerColors[key] = c; render(); saveState(); });
+    return;
+  }
+  if(role === 'hcolor-day'){
+    e.stopPropagation();
+    const dIdx = t.dataset.day;
+    openSimpleColorPopover(t, card.headerColors.days[dIdx], (c)=>{ card.headerColors.days[dIdx] = c; render(); saveState(); });
+    return;
+  }
+  if(role === 'breakcolor'){
+    e.stopPropagation();
+    const grp = t.dataset.group, bIdx = Number(t.dataset.idx);
+    openSimpleColorPopover(t, card.breakColors[grp][bIdx], (c)=>{ card.breakColors[grp][bIdx] = c; render(); saveState(); });
+    return;
+  }
   if(role === 'link-add'){ card.notes.links.push({title:'', url:''}); render(); saveState(); return; }
   if(role === 'link-rm'){ card.notes.links.splice(Number(t.dataset.idx),1); render(); saveState(); return; }
   if(role === 'todo-add'){ card.notes.todos.push({text:'', done:false}); render(); saveState(); return; }
@@ -976,6 +1020,49 @@ document.getElementById('cardsWrap').addEventListener('change', (e)=>{
   if(role === 'todo-text'){ card.notes.todos[idx].text = t.value; saveState(); return; }
   if(role === 'todo-check'){ card.notes.todos[idx].done = t.checked; render(); saveState(); return; }
 });
+
+function openSimpleColorPopover(anchor, currentColor, onPick){
+  document.querySelectorAll('.style-pop').forEach(p=>p.remove());
+
+  const pop = document.createElement('div');
+  pop.className = 'style-pop show';
+
+  const label = document.createElement('div');
+  label.className = 'style-pop-label';
+  label.textContent = '背景顏色';
+  pop.appendChild(label);
+
+  const grid = document.createElement('div');
+  grid.className = 'swatch-grid';
+  PALETTE.forEach(c=>{
+    const sw = document.createElement('span');
+    sw.className = 'swatch' + (c===currentColor ? ' active' : '');
+    sw.style.background = c;
+    sw.addEventListener('click', ()=>{ onPick(c); pop.remove(); });
+    grid.appendChild(sw);
+  });
+  pop.appendChild(grid);
+
+  const resetBtn = document.createElement('button');
+  resetBtn.className = 'pop-close';
+  resetBtn.textContent = '↩️ 恢復預設色';
+  resetBtn.addEventListener('click', ()=>{ onPick(null); pop.remove(); });
+  pop.appendChild(resetBtn);
+
+  document.body.appendChild(pop);
+  const r = anchor.getBoundingClientRect();
+  const popW = 236;
+  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - popW - 8)) + 'px';
+  pop.style.top = (r.bottom + 6) + 'px';
+
+  const closeOnce = (ev)=>{
+    if(!pop.contains(ev.target) && ev.target !== anchor){
+      pop.remove();
+      document.removeEventListener('click', closeOnce);
+    }
+  };
+  setTimeout(()=>document.addEventListener('click', closeOnce), 10);
+}
 
 function openCellStylePopover(anchor, cardId, periodN, dayIdx){
   document.querySelectorAll('.style-pop').forEach(p=>p.remove());
@@ -1108,32 +1195,42 @@ function changeSelectionFontSize(delta){
   const sel = window.getSelection();
   sel.removeAllRanges();
   sel.addRange(savedRange);
+  const range = sel.getRangeAt(0);
+  if(range.collapsed) return;
 
   // figure out the current rendered size at the start of the selection
-  let node = savedRange.startContainer;
-  let el = node.nodeType === 3 ? node.parentElement : node;
-  const currentPx = parseFloat(window.getComputedStyle(el).fontSize) || 12.5;
-  const newPx = Math.max(8, Math.min(40, Math.round((currentPx + delta) * 10) / 10));
+  let node = range.startContainer;
+  let refEl = node.nodeType === 3 ? node.parentElement : node;
+  const currentPx = parseFloat(window.getComputedStyle(refEl).fontSize) || 12.5;
+  const newPx = Math.max(8, Math.min(60, Math.round((currentPx + delta) * 10) / 10));
 
-  // classic cross-browser trick: execCommand('fontSize') reliably wraps the
-  // selection (even across multiple nodes) in <font size="7"> tags, which we
-  // then swap out for a plain span with the exact pixel size we want
-  document.execCommand('styleWithCSS', false, true);
-  document.execCommand('fontSize', false, '7');
-  activeCourseEl.querySelectorAll('font[size="7"]').forEach(f=>{
-    const span = document.createElement('span');
-    span.style.fontSize = newPx + 'px';
-    while(f.firstChild) span.appendChild(f.firstChild);
-    f.parentNode.replaceChild(span, f);
-  });
+  // wrap the exact selected range in a span with the new pixel size —
+  // plain DOM surgery instead of execCommand, so there's no browser-specific
+  // "jump to a huge default size" quirk
+  const span = document.createElement('span');
+  span.style.fontSize = newPx + 'px';
+  try{
+    range.surroundContents(span);
+  }catch(err){
+    // selection crosses existing element boundaries (e.g. spans two differently
+    // colored runs) — surroundContents can't handle that, so extract + rewrap instead
+    const frag = range.extractContents();
+    span.appendChild(frag);
+    range.insertNode(span);
+  }
+
+  // reselect the wrapped text so the next click (or the color/bold buttons) still targets it
+  const newRange = document.createRange();
+  newRange.selectNodeContents(span);
+  sel.removeAllRanges();
+  sel.addRange(newRange);
+  savedRange = newRange.cloneRange();
 
   const card = getCard(activeCourseEl.dataset.card);
   if(card){
     card.cells[activeCourseEl.dataset.period][activeCourseEl.dataset.day].course = activeCourseEl.innerHTML;
     debouncedSave();
   }
-  const sel2 = window.getSelection();
-  savedRange = (sel2 && sel2.rangeCount) ? sel2.getRangeAt(0).cloneRange() : null;
 }
 
 function applyToSelection(cmd, val){
