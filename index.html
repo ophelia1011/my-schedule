@@ -165,9 +165,9 @@
   .grid-scroll{ overflow-x:auto; margin-bottom:16px; border-radius:14px; }
   .week-grid{
     display:grid;
-    grid-template-columns: calc(42px * var(--rowfs)) calc(58px * var(--rowfs)) repeat(5, minmax(96px,1fr));
+    grid-template-columns: calc(46px * var(--rowfs)) calc(92px * var(--rowfs)) repeat(5, minmax(96px,1fr));
     gap:5px;
-    min-width:660px;
+    min-width:700px;
   }
   .hcell{
     background:var(--pink-light);
@@ -200,7 +200,7 @@
   .cell-num textarea.rowfield, .cell-time textarea.rowfield{
     width:100%; text-align:center; border:none; background:transparent;
     font-size:calc(11.5px * var(--rowfs)); font-weight:600; color:var(--ink-soft); font-family:'Fredoka',sans-serif;
-    resize:none; overflow:hidden; padding:0; margin:0; white-space:normal; word-break:break-word;
+    resize:none; overflow:hidden; padding:0; margin:0; white-space:normal; word-break:normal; overflow-wrap:normal;
   }
   .cell-time textarea.rowfield{font-size:calc(12px * var(--rowfs));}
   .cell-num textarea.rowfield:focus, .cell-time textarea.rowfield:focus{outline:none;}
