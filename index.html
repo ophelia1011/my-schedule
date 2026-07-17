@@ -197,12 +197,13 @@
     width:9px; height:9px; border-radius:50%; cursor:pointer;
     border:1.5px solid rgba(255,255,255,0.9); box-shadow:0 0 0 1px rgba(0,0,0,0.1);
   }
-  .cell-num input, .cell-time input{
+  .cell-num textarea.rowfield, .cell-time textarea.rowfield{
     width:100%; text-align:center; border:none; background:transparent;
     font-size:calc(11.5px * var(--rowfs)); font-weight:600; color:var(--ink-soft); font-family:'Fredoka',sans-serif;
+    resize:none; overflow:hidden; padding:0; margin:0; white-space:normal; word-break:break-word;
   }
-  .cell-time input{font-size:calc(12px * var(--rowfs)); padding:0;}
-  .cell-num input:focus, .cell-time input:focus{outline:none;}
+  .cell-time textarea.rowfield{font-size:calc(12px * var(--rowfs));}
+  .cell-num textarea.rowfield:focus, .cell-time textarea.rowfield:focus{outline:none;}
 
   .period-cell{
     border-radius:12px; padding:6px 7px;
@@ -821,6 +822,15 @@ function removeCard(id){
 
 function escapeAttr(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 function escapeHTML(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function normalizeUrl(u){
+  u = (u||'').trim();
+  if(!u) return '';
+  // already has a scheme (http:, https:, mailto:, tel:, etc.) — leave it alone;
+  // otherwise it's a bare domain like "www.youtube.com" which the browser would
+  // otherwise resolve as a path relative to this app's own URL
+  if(/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(u)) return u;
+  return 'https://' + u;
+}
 
 function periodRowHTML(card, n){
   const time = card.periodTimes[n];
@@ -845,11 +855,11 @@ function periodRowHTML(card, n){
   return `
   <div class="cell-num" data-batchkind="rownum" data-card="${card.id}" data-a="${n}" style="background:${numBg}">
     <span class="h-dot" style="background:${numBg}" data-role="rowcolor" data-card="${card.id}" data-period="${n}" data-kind="num"></span>
-    <input type="text" value="${escapeAttr(num)}" data-role="periodnum" data-card="${card.id}" data-period="${n}">
+    <textarea class="rowfield autogrow" rows="1" data-role="periodnum" data-card="${card.id}" data-period="${n}">${escapeHTML(num)}</textarea>
   </div>
   <div class="cell-time" data-batchkind="rowtime" data-card="${card.id}" data-a="${n}" style="background:${timeBg}">
     <span class="h-dot" style="background:${timeBg}" data-role="rowcolor" data-card="${card.id}" data-period="${n}" data-kind="time"></span>
-    <input type="text" value="${escapeAttr(time)}" data-role="periodtime" data-card="${card.id}" data-period="${n}">
+    <textarea class="rowfield autogrow" rows="1" data-role="periodtime" data-card="${card.id}" data-period="${n}">${escapeHTML(time)}</textarea>
   </div>
   ${daysHTML}`;
 }
@@ -899,7 +909,7 @@ function linksSection(card){
       <input type="text" class="link-url" placeholder="https://..." value="${escapeAttr(l.url)}" data-role="link-url" data-card="${card.id}" data-idx="${i}">
       <button class="rm" data-role="link-rm" data-card="${card.id}" data-idx="${i}">✕</button>
     </div>`).join('');
-  const linkList = links.filter(l=>l.url).map(l=>`<div class="link-row">🔗 <a href="${escapeAttr(l.url)}" target="_blank" rel="noopener">${escapeHTML(l.title||l.url)}</a></div>`).join('');
+  const linkList = links.filter(l=>l.url).map(l=>`<div class="link-row">🔗 <a href="${escapeAttr(normalizeUrl(l.url))}" target="_blank" rel="noopener">${escapeHTML(l.title||l.url)}</a></div>`).join('');
   return `
   <details class="note">
     <summary>🔗 相關網頁 <span class="arrow">▶</span></summary>
