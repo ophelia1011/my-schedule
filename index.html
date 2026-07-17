@@ -25,6 +25,7 @@
     --gray: #DADAE2;
     --gray-light: #F1F1F5;
     --fs: 1;
+    --rowfs: 1;
     --ink: #4A4258;
     --ink-soft: #837B92;
     --white: #FFFFFF;
@@ -74,6 +75,10 @@
   .tool-btn.save:hover{ background:var(--pink-deep); }
   .tool-btn.restore{ background:var(--gray-light); color:var(--ink); }
   .tool-btn.restore:hover{ background:var(--gray); }
+  .tool-btn.batch{ background:var(--purple-light); color:#5B3F7A; }
+  .tool-btn.batch.active{ background:var(--purple); color:white; }
+  .tool-btn.batch:hover{ filter:brightness(0.97); }
+  .fs-label{ font-size:10.5px; font-weight:600; color:var(--ink-soft); font-family:'Fredoka',sans-serif; }
   .save-status{ font-size:calc(11.5px * var(--fs)); color:var(--ink-soft); margin-left:auto; }
   .fontsize-ctrl{ display:flex; gap:4px; }
   .fs-btn{
@@ -160,7 +165,7 @@
   .grid-scroll{ overflow-x:auto; margin-bottom:16px; border-radius:14px; }
   .week-grid{
     display:grid;
-    grid-template-columns: 42px 58px repeat(5, minmax(96px,1fr));
+    grid-template-columns: calc(42px * var(--rowfs)) calc(58px * var(--rowfs)) repeat(5, minmax(96px,1fr));
     gap:5px;
     min-width:660px;
   }
@@ -180,16 +185,23 @@
     width:100%; text-align:center; border:none; background:transparent;
     font-family:'Fredoka',sans-serif; font-weight:700; font-size:calc(12.5px * var(--fs)); color:var(--pink-deep);
   }
+  .hcell.rowlabel input{ font-size:calc(12.5px * var(--rowfs)); }
   .hcell input:focus{outline:none;}
   .cell-num,.cell-time{
     display:flex; align-items:center; justify-content:center;
     background:var(--gray-light); border-radius:10px; padding:4px 2px;
+    position:relative;
+  }
+  .cell-num .h-dot, .cell-time .h-dot{
+    position:absolute; top:2px; right:2px;
+    width:9px; height:9px; border-radius:50%; cursor:pointer;
+    border:1.5px solid rgba(255,255,255,0.9); box-shadow:0 0 0 1px rgba(0,0,0,0.1);
   }
   .cell-num input, .cell-time input{
     width:100%; text-align:center; border:none; background:transparent;
-    font-size:calc(11.5px * var(--fs)); font-weight:600; color:var(--ink-soft); font-family:'Fredoka',sans-serif;
+    font-size:calc(11.5px * var(--rowfs)); font-weight:600; color:var(--ink-soft); font-family:'Fredoka',sans-serif;
   }
-  .cell-time input{font-size:calc(12px * var(--fs)); padding:0;}
+  .cell-time input{font-size:calc(12px * var(--rowfs)); padding:0;}
   .cell-num input:focus, .cell-time input:focus{outline:none;}
 
   .period-cell{
@@ -389,6 +401,37 @@
     font-size:calc(12px * var(--fs)); opacity:0; transition:opacity .3s; z-index:70; pointer-events:none;
   }
   .toast.show{opacity:0.92;}
+
+  /* ---------- Batch multi-select coloring ---------- */
+  body.batch-mode [data-batchkind]{ cursor:pointer; }
+  [data-batchkind].batch-selected{
+    outline:3px solid var(--pink-deep); outline-offset:-2px;
+    box-shadow:0 0 0 5px rgba(232,85,137,0.25);
+  }
+  .batch-bar{
+    position:fixed; left:0; right:0; bottom:0; z-index:80;
+    display:none; justify-content:center;
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+    background:rgba(255,255,255,0.97); backdrop-filter:blur(6px);
+    box-shadow:0 -6px 20px rgba(180,130,160,0.18);
+  }
+  .batch-bar.show{ display:flex; }
+  .batch-bar-inner{
+    max-width:720px; width:100%; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  .batch-bar-label{
+    font-family:'Fredoka',sans-serif; font-weight:700; font-size:12.5px; color:var(--ink); flex:none;
+  }
+  .batch-swatch-grid{ display:flex; gap:5px; flex-wrap:wrap; flex:1; }
+  .batch-swatch-grid span{
+    width:22px; height:22px; border-radius:50%; cursor:pointer; flex:none;
+    border:2px solid white; box-shadow:0 0 0 1px rgba(0,0,0,0.1);
+  }
+  .batch-done-btn{
+    font-family:'Fredoka',sans-serif; font-weight:700; font-size:12.5px;
+    border:none; border-radius:999px; padding:8px 16px; cursor:pointer;
+    background:var(--pink); color:white; flex:none;
+  }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -405,10 +448,16 @@
 <div class="toolbar">
   <button class="tool-btn save" id="saveBtn">💾 儲存</button>
   <button class="tool-btn restore" id="restoreBtn">↩️ 還原上次儲存</button>
-  <div class="fontsize-ctrl">
+  <div class="fontsize-ctrl" title="整份課表字級">
     <button class="fs-btn" id="fsDownBtn" title="縮小文字">A−</button>
     <button class="fs-btn" id="fsUpBtn" title="放大文字">A+</button>
   </div>
+  <div class="fontsize-ctrl" title="節次／時間欄字級">
+    <span class="fs-label">節次/時間</span>
+    <button class="fs-btn" id="rowFsDownBtn" title="縮小節次/時間文字">A−</button>
+    <button class="fs-btn" id="rowFsUpBtn" title="放大節次/時間文字">A+</button>
+  </div>
+  <button class="tool-btn batch" id="batchToggleBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
 </div>
 
@@ -423,6 +472,13 @@
 <button class="jump-fab" id="jumpBtn">📍 本週</button>
 <div class="toast" id="toast"></div>
 <div class="sel-toolbar" id="selToolbar"></div>
+<div class="batch-bar" id="batchBar">
+  <div class="batch-bar-inner">
+    <span class="batch-bar-label">已選 <span id="batchCount">0</span> 格 · 點色塊套用</span>
+    <div class="batch-swatch-grid" id="batchSwatchGrid"></div>
+    <button class="batch-done-btn" id="batchDoneBtn">完成</button>
+  </div>
+</div>
 
 <script>
 const PALETTE = [
@@ -469,6 +525,37 @@ function initFontScale(){
 }
 initFontScale();
 
+const ROW_FONT_SCALE_KEY = 'nature-class-row-font-scale';
+const ROW_FONT_SCALE_MIN = 0.7, ROW_FONT_SCALE_MAX = 2.2, ROW_FONT_SCALE_STEP = 0.1;
+
+function applyRowFontScale(scale){
+  scale = Math.min(ROW_FONT_SCALE_MAX, Math.max(ROW_FONT_SCALE_MIN, scale));
+  document.documentElement.style.setProperty('--rowfs', scale);
+  try{ localStorage.setItem(ROW_FONT_SCALE_KEY, String(scale)); }catch(e){}
+  return scale;
+}
+
+function initRowFontScale(){
+  let saved = 1;
+  try{
+    const raw = localStorage.getItem(ROW_FONT_SCALE_KEY);
+    if(raw) saved = parseFloat(raw) || 1;
+  }catch(e){}
+  applyRowFontScale(saved);
+
+  const upBtn = document.getElementById('rowFsUpBtn');
+  const downBtn = document.getElementById('rowFsDownBtn');
+  upBtn.addEventListener('click', ()=>{
+    const current = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--rowfs')) || 1;
+    applyRowFontScale(current + ROW_FONT_SCALE_STEP);
+  });
+  downBtn.addEventListener('click', ()=>{
+    const current = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--rowfs')) || 1;
+    applyRowFontScale(current - ROW_FONT_SCALE_STEP);
+  });
+}
+initRowFontScale();
+
 const firebaseConfig = {
   apiKey: "AIzaSyA1xjQ1eXF7cFc6W2AenQWSWxPxEnmhSII",
   authDomain: "schedule-1eb79.firebaseapp.com",
@@ -508,6 +595,7 @@ function defaultCard(){
     breaksB: [ {label:'整潔時間', time:'15:30~15:50'}, {label:'降旗放學', time:'15:50~16:00'} ],
     headerColors: { period: null, time: null, days: {0:null,1:null,2:null,3:null,4:null} },
     breakColors: { breaksA: [null, null], breaksB: [null, null] },
+    rowColors: {1:{num:null,time:null},2:{num:null,time:null},3:{num:null,time:null},4:{num:null,time:null},5:{num:null,time:null},6:{num:null,time:null},7:{num:null,time:null}},
     cells,
     notes: {
       highlights: {0:'',1:'',2:'',3:'',4:''},
@@ -591,6 +679,12 @@ function normalizeCard(c){
   c.breakColors = c.breakColors || {};
   c.breakColors.breaksA = c.breakColors.breaksA || [null, null];
   c.breakColors.breaksB = c.breakColors.breaksB || [null, null];
+  c.rowColors = c.rowColors || {};
+  [1,2,3,4,5,6,7].forEach(n=>{
+    c.rowColors[n] = c.rowColors[n] || {};
+    if(c.rowColors[n].num === undefined) c.rowColors[n].num = null;
+    if(c.rowColors[n].time === undefined) c.rowColors[n].time = null;
+  });
   if(c.cells){
     Object.keys(c.cells).forEach(n=>{
       Object.keys(c.cells[n]).forEach(d=>{
@@ -731,13 +825,16 @@ function escapeHTML(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function periodRowHTML(card, n){
   const time = card.periodTimes[n];
   const num = card.periodNums[n];
+  const rowBg = card.rowColors[n] || {num:null, time:null};
+  const numBg = rowBg.num || 'var(--gray-light)';
+  const timeBg = rowBg.time || 'var(--gray-light)';
   let daysHTML = '';
   for(let d=0; d<5; d++){
     const cell = card.cells[n][d];
     const weight = cell.bold===false ? '400' : '700';
     const classNameWeight = cell.classNameBold ? '700' : '400';
     daysHTML += `
-    <div class="period-cell" style="background:${cell.color}; color:${cell.textColor||'#4A4258'};">
+    <div class="period-cell" data-batchkind="course" data-card="${card.id}" data-a="${n}" data-b="${d}" style="background:${cell.color}; color:${cell.textColor||'#4A4258'};">
       <div class="top-row">
         <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
         <textarea class="classname autogrow" rows="1" placeholder="班級" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
@@ -746,8 +843,14 @@ function periodRowHTML(card, n){
     </div>`;
   }
   return `
-  <div class="cell-num"><input type="text" value="${escapeAttr(num)}" data-role="periodnum" data-card="${card.id}" data-period="${n}"></div>
-  <div class="cell-time"><input type="text" value="${escapeAttr(time)}" data-role="periodtime" data-card="${card.id}" data-period="${n}"></div>
+  <div class="cell-num" data-batchkind="rownum" data-card="${card.id}" data-a="${n}" style="background:${numBg}">
+    <span class="h-dot" style="background:${numBg}" data-role="rowcolor" data-card="${card.id}" data-period="${n}" data-kind="num"></span>
+    <input type="text" value="${escapeAttr(num)}" data-role="periodnum" data-card="${card.id}" data-period="${n}">
+  </div>
+  <div class="cell-time" data-batchkind="rowtime" data-card="${card.id}" data-a="${n}" style="background:${timeBg}">
+    <span class="h-dot" style="background:${timeBg}" data-role="rowcolor" data-card="${card.id}" data-period="${n}" data-kind="time"></span>
+    <input type="text" value="${escapeAttr(time)}" data-role="periodtime" data-card="${card.id}" data-period="${n}">
+  </div>
   ${daysHTML}`;
 }
 
@@ -755,7 +858,7 @@ function breakRowHTML(card, group, idx){
   const b = card[group][idx];
   const bg = (card.breakColors && card.breakColors[group] && card.breakColors[group][idx]) || 'var(--pink-light)';
   return `
-  <div class="break-row" style="background:${bg}">
+  <div class="break-row" data-batchkind="break" data-card="${card.id}" data-a="${group}" data-b="${idx}" style="background:${bg}">
     <span class="b-dot" style="background:${bg}" data-role="breakcolor" data-card="${card.id}" data-group="${group}" data-idx="${idx}"></span>
     <input class="blabel" type="text" value="${escapeAttr(b.label)}" data-role="breaklabel" data-card="${card.id}" data-group="${group}" data-idx="${idx}">
     <input class="btime" type="text" value="${escapeAttr(b.time)}" data-role="breaktime" data-card="${card.id}" data-group="${group}" data-idx="${idx}">
@@ -830,11 +933,11 @@ function cardHTML(card){
   let gridRows = '';
   const periodBg = card.headerColors.period || 'var(--pink-light)';
   const timeBg = card.headerColors.time || 'var(--pink-light)';
-  gridRows += `<div class="hcell" style="background:${periodBg}"><span class="h-dot" style="background:${periodBg}" data-role="hcolor" data-card="${card.id}" data-key="period"></span><input type="text" value="${escapeAttr(card.colLabels.period)}" data-role="collabel" data-card="${card.id}" data-key="period"></div>`;
-  gridRows += `<div class="hcell" style="background:${timeBg}"><span class="h-dot" style="background:${timeBg}" data-role="hcolor" data-card="${card.id}" data-key="time"></span><input type="text" value="${escapeAttr(card.colLabels.time)}" data-role="collabel" data-card="${card.id}" data-key="time"></div>`;
+  gridRows += `<div class="hcell rowlabel" data-batchkind="hcell" data-card="${card.id}" data-a="period" style="background:${periodBg}"><span class="h-dot" style="background:${periodBg}" data-role="hcolor" data-card="${card.id}" data-key="period"></span><input type="text" value="${escapeAttr(card.colLabels.period)}" data-role="collabel" data-card="${card.id}" data-key="period"></div>`;
+  gridRows += `<div class="hcell rowlabel" data-batchkind="hcell" data-card="${card.id}" data-a="time" style="background:${timeBg}"><span class="h-dot" style="background:${timeBg}" data-role="hcolor" data-card="${card.id}" data-key="time"></span><input type="text" value="${escapeAttr(card.colLabels.time)}" data-role="collabel" data-card="${card.id}" data-key="time"></div>`;
   card.days.forEach((day,d)=>{
     const dayBg = card.headerColors.days[d] || 'var(--pink-light)';
-    gridRows += `<div class="hcell" style="background:${dayBg}"><span class="h-dot" style="background:${dayBg}" data-role="hcolor-day" data-card="${card.id}" data-day="${d}"></span><input type="text" value="${escapeAttr(day)}" data-role="daylabel" data-card="${card.id}" data-day="${d}"></div>`;
+    gridRows += `<div class="hcell" data-batchkind="hcellday" data-card="${card.id}" data-a="${d}" style="background:${dayBg}"><span class="h-dot" style="background:${dayBg}" data-role="hcolor-day" data-card="${card.id}" data-day="${d}"></span><input type="text" value="${escapeAttr(day)}" data-role="daylabel" data-card="${card.id}" data-day="${d}"></div>`;
   });
 
   [1,2,3,4].forEach(n=>{ gridRows += periodRowHTML(card, n); });
@@ -957,7 +1060,22 @@ document.getElementById('cardsWrap').addEventListener('input', (e)=>{
   }
 });
 
+document.getElementById('cardsWrap').addEventListener('mousedown', (e)=>{
+  if(batchMode && e.target.closest('[data-batchkind]')){
+    e.preventDefault();
+  }
+});
+
 document.getElementById('cardsWrap').addEventListener('click', (e)=>{
+  if(batchMode){
+    const bt = e.target.closest('[data-batchkind]');
+    if(bt){
+      e.stopPropagation();
+      e.preventDefault();
+      toggleBatchTarget(bt);
+    }
+    return;
+  }
   const t = e.target;
   const role = t.dataset.role;
   if(!role) return;
@@ -980,6 +1098,13 @@ document.getElementById('cardsWrap').addEventListener('click', (e)=>{
     e.stopPropagation();
     const dIdx = t.dataset.day;
     openSimpleColorPopover(t, card.headerColors.days[dIdx], (c)=>{ card.headerColors.days[dIdx] = c; render(); saveState(); });
+    return;
+  }
+  if(role === 'rowcolor'){
+    e.stopPropagation();
+    const pn = t.dataset.period, kind = t.dataset.kind;
+    card.rowColors[pn] = card.rowColors[pn] || {};
+    openSimpleColorPopover(t, card.rowColors[pn][kind], (c)=>{ card.rowColors[pn][kind] = c; render(); saveState(); });
     return;
   }
   if(role === 'breakcolor'){
@@ -1296,6 +1421,77 @@ document.addEventListener('mousedown', (e)=>{
     hideSelToolbar();
   }
 });
+
+/* ---------- Batch multi-select coloring ---------- */
+let batchMode = false;
+let batchSelection = new Set();
+
+function batchKey(kind, cardId, a, b){
+  return [kind, cardId, a, b===undefined ? '' : b].join('|');
+}
+
+function updateBatchCount(){
+  const el = document.getElementById('batchCount');
+  if(el) el.textContent = String(batchSelection.size);
+}
+
+function toggleBatchTarget(el){
+  const kind = el.dataset.batchkind;
+  const cardId = el.dataset.card;
+  const a = el.dataset.a;
+  const b = el.dataset.b;
+  const key = batchKey(kind, cardId, a, b);
+  if(batchSelection.has(key)){
+    batchSelection.delete(key);
+    el.classList.remove('batch-selected');
+  }else{
+    batchSelection.add(key);
+    el.classList.add('batch-selected');
+  }
+  updateBatchCount();
+}
+
+function applyBatchColor(color){
+  if(batchSelection.size === 0) return;
+  batchSelection.forEach(key=>{
+    const [kind, cardId, a, b] = key.split('|');
+    const card = getCard(cardId);
+    if(!card) return;
+    if(kind === 'course'){ card.cells[a][b].color = color; }
+    else if(kind === 'rownum'){ card.rowColors[a] = card.rowColors[a] || {}; card.rowColors[a].num = color; }
+    else if(kind === 'rowtime'){ card.rowColors[a] = card.rowColors[a] || {}; card.rowColors[a].time = color; }
+    else if(kind === 'hcell'){ card.headerColors[a] = color; }
+    else if(kind === 'hcellday'){ card.headerColors.days[a] = color; }
+    else if(kind === 'break'){ card.breakColors[a][Number(b)] = color; }
+  });
+  batchSelection.clear();
+  render();
+  saveState();
+  showToast('✅ 已套用顏色到選取的格子');
+}
+
+function setBatchMode(on){
+  batchMode = on;
+  batchSelection.clear();
+  document.body.classList.toggle('batch-mode', batchMode);
+  document.getElementById('batchBar').classList.toggle('show', batchMode);
+  document.getElementById('batchToggleBtn').classList.toggle('active', batchMode);
+  updateBatchCount();
+  render();
+}
+
+function initBatchMode(){
+  const grid = document.getElementById('batchSwatchGrid');
+  PALETTE.forEach(c=>{
+    const sw = document.createElement('span');
+    sw.style.background = c;
+    sw.addEventListener('click', ()=>applyBatchColor(c));
+    grid.appendChild(sw);
+  });
+  document.getElementById('batchToggleBtn').addEventListener('click', ()=>setBatchMode(!batchMode));
+  document.getElementById('batchDoneBtn').addEventListener('click', ()=>setBatchMode(false));
+}
+initBatchMode();
 
 loadState();
 </script>
