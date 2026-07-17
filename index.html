@@ -234,6 +234,11 @@
     font-weight:700; font-family:'Fredoka',sans-serif; font-size:calc(12.5px * var(--fs));
     padding:5px 9px; cursor:pointer; flex:none;
   }
+  .sel-toolbar .selfont-btn{
+    border:none; border-radius:8px; background:var(--gray-light); color:var(--ink);
+    font-weight:700; font-family:'Fredoka',sans-serif; font-size:calc(11px * var(--fs));
+    padding:5px 8px; cursor:pointer; flex:none;
+  }
   .sel-toolbar .selclear-btn{
     border:none; border-radius:8px; background:none; color:var(--ink-soft);
     font-size:calc(15px * var(--fs)); cursor:pointer; padding:3px 5px; flex:none;
@@ -1067,7 +1072,7 @@ function buildSelToolbar(){
     const borderExtra = c === '#FFFFFF' ? 'border:2px solid #ddd;' : '';
     html += `<span class="csw" data-color="${c}" style="background:${c};${borderExtra}"></span>`;
   });
-  html += '</div><div class="csep"></div><button type="button" class="selbold-btn" id="selBoldBtn">B</button><button type="button" class="selclear-btn" id="selClearBtn" title="清除此段格式">⨯</button>';
+  html += '</div><div class="csep"></div><button type="button" class="selfont-btn" id="selFontDownBtn" title="縮小這段文字">A−</button><button type="button" class="selfont-btn" id="selFontUpBtn" title="放大這段文字">A+</button><div class="csep"></div><button type="button" class="selbold-btn" id="selBoldBtn">B</button><button type="button" class="selclear-btn" id="selClearBtn" title="清除此段格式">⨯</button>';
   bar.innerHTML = html;
 
   bar.querySelectorAll('.csw').forEach(sw=>{
@@ -1084,8 +1089,52 @@ function buildSelToolbar(){
   clearBtn.addEventListener('pointerdown', e=>e.preventDefault());
   clearBtn.addEventListener('mousedown', e=>e.preventDefault());
   clearBtn.addEventListener('click', ()=>applyToSelection('removeFormat'));
+
+  const fontDownBtn = document.getElementById('selFontDownBtn');
+  fontDownBtn.addEventListener('pointerdown', e=>e.preventDefault());
+  fontDownBtn.addEventListener('mousedown', e=>e.preventDefault());
+  fontDownBtn.addEventListener('click', ()=>changeSelectionFontSize(-1.5));
+
+  const fontUpBtn = document.getElementById('selFontUpBtn');
+  fontUpBtn.addEventListener('pointerdown', e=>e.preventDefault());
+  fontUpBtn.addEventListener('mousedown', e=>e.preventDefault());
+  fontUpBtn.addEventListener('click', ()=>changeSelectionFontSize(1.5));
 }
 buildSelToolbar();
+
+function changeSelectionFontSize(delta){
+  if(!activeCourseEl || !savedRange) return;
+  activeCourseEl.focus();
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(savedRange);
+
+  // figure out the current rendered size at the start of the selection
+  let node = savedRange.startContainer;
+  let el = node.nodeType === 3 ? node.parentElement : node;
+  const currentPx = parseFloat(window.getComputedStyle(el).fontSize) || 12.5;
+  const newPx = Math.max(8, Math.min(40, Math.round((currentPx + delta) * 10) / 10));
+
+  // classic cross-browser trick: execCommand('fontSize') reliably wraps the
+  // selection (even across multiple nodes) in <font size="7"> tags, which we
+  // then swap out for a plain span with the exact pixel size we want
+  document.execCommand('styleWithCSS', false, true);
+  document.execCommand('fontSize', false, '7');
+  activeCourseEl.querySelectorAll('font[size="7"]').forEach(f=>{
+    const span = document.createElement('span');
+    span.style.fontSize = newPx + 'px';
+    while(f.firstChild) span.appendChild(f.firstChild);
+    f.parentNode.replaceChild(span, f);
+  });
+
+  const card = getCard(activeCourseEl.dataset.card);
+  if(card){
+    card.cells[activeCourseEl.dataset.period][activeCourseEl.dataset.day].course = activeCourseEl.innerHTML;
+    debouncedSave();
+  }
+  const sel2 = window.getSelection();
+  savedRange = (sel2 && sel2.rangeCount) ? sel2.getRangeAt(0).cloneRange() : null;
+}
 
 function applyToSelection(cmd, val){
   if(!activeCourseEl || !savedRange) return;
