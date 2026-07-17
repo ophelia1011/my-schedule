@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>課程進度表</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #FFF7FA;
+    --pink: #FF6FA0;
+    --pink-deep: #E85589;
+    --pink-light: #FFD6E8;
+    --blue: #6EC3FF;
+    --blue-light: #CFE9FF;
+    --purple: #B79CE0;
+    --purple-light: #ECE3F8;
+    --yellow: #FFD98A;
+    --yellow-light: #FFF1D2;
+    --green: #A8E0A0;
+    --green-light: #E4F6E1;
+    --orange: #FFB870;
+    --orange-light: #FFEBD4;
+    --gray: #DADAE2;
+    --gray-light: #F1F1F5;
+    --ink: #4A4258;
+    --ink-soft: #837B92;
+    --white: #FFFFFF;
+    --shadow: 0 8px 24px rgba(180, 130, 160, 0.18);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Noto Sans TC', sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 20px 20px, rgba(255,111,160,0.06) 2px, transparent 2px),
+      var(--bg);
+    background-size: 40px 40px, auto;
+    min-height:100vh;
+    padding-bottom:120px;
+  }
+  h1,h2,h3,.display{font-family:'Fredoka', 'Noto Sans TC', sans-serif;}
+
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background: linear-gradient(135deg, var(--pink) 0%, #FF8FB8 60%, var(--blue) 130%);
+    padding:22px 20px 26px;
+    border-radius:0 0 28px 28px;
+    box-shadow: var(--shadow);
+    color:white;
+    text-align:center;
+    overflow:hidden;
+  }
+  .topbar .deco{position:absolute; font-size:26px; opacity:0.55; user-select:none;}
+  .topbar h1{margin:0; font-size:24px; font-weight:700; letter-spacing:1px; text-shadow:0 2px 6px rgba(0,0,0,0.12);}
+  .topbar p{margin:6px 0 0; font-size:12.5px; opacity:0.92; font-weight:500;}
+
+  .toolbar{
+    position:sticky; top:0; z-index:49;
+    max-width:720px; margin:0 auto; padding:10px 14px;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    background:rgba(255,247,250,0.92); backdrop-filter:blur(4px);
+    border-bottom:1px solid var(--gray-light);
+  }
+  .tool-btn{
+    font-family:'Fredoka',sans-serif; font-weight:600; font-size:13px;
+    border:none; border-radius:999px; padding:8px 14px; cursor:pointer;
+  }
+  .tool-btn.save{ background:var(--pink); color:white; }
+  .tool-btn.save:hover{ background:var(--pink-deep); }
+  .tool-btn.restore{ background:var(--gray-light); color:var(--ink); }
+  .tool-btn.restore:hover{ background:var(--gray); }
+  .save-status{ font-size:11.5px; color:var(--ink-soft); margin-left:auto; }
+
+  .wrap{max-width:720px; margin:0 auto; padding:22px 14px 0;}
+  .empty-state{text-align:center; padding:60px 20px; color:var(--ink-soft);}
+  .empty-state .big{font-size:44px; margin-bottom:10px;}
+
+  .day-card{
+    position:relative;
+    background:var(--white);
+    border-radius:22px;
+    box-shadow: var(--shadow);
+    margin-bottom:34px;
+    padding:22px 16px 18px;
+    animation: pop .35s ease;
+  }
+  @keyframes pop{ from{opacity:0; transform:translateY(10px) scale(0.98);} to{opacity:1; transform:none;} }
+
+  .pin{
+    position:absolute; top:-14px; left:50%; transform:translateX(-50%);
+    width:30px; height:30px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #FFF, var(--pink-deep) 70%);
+    box-shadow:0 3px 6px rgba(0,0,0,0.25);
+  }
+
+  .card-head{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    margin-bottom:12px; padding-top:6px;
+  }
+  .toggle-arrow{
+    flex:none; font-size:14px; color:var(--pink-deep); cursor:pointer;
+    transition:transform .2s ease; padding:4px 3px; user-select:none; line-height:1;
+  }
+  .day-card.collapsed .toggle-arrow{ transform:rotate(-90deg); }
+  .week-badge{
+    flex:none; font-family:'Fredoka',sans-serif; font-weight:600; font-size:12px;
+    color:#1c6fa8; background:var(--blue-light); border-radius:999px; padding:6px 11px;
+    cursor:pointer; white-space:nowrap;
+  }
+  .day-card.current .week-badge{ background:var(--pink); color:white; }
+  .day-card.collapsed{ padding-bottom:16px; }
+  .card-body{ margin-top:2px; }
+  .jump-fab{
+    position:fixed; left:20px; bottom:26px; z-index:60;
+    background:var(--white); color:var(--pink-deep); border:2px solid var(--pink-light);
+    border-radius:999px; padding:13px 18px; font-size:13px; font-weight:700;
+    font-family:'Fredoka',sans-serif; box-shadow:var(--shadow); cursor:pointer;
+    display:flex; align-items:center; gap:5px;
+  }
+  .jump-fab:hover{transform:translateY(-2px);}
+  .classroom-title{
+    font-family:'Fredoka', sans-serif;
+    font-size:19px; font-weight:700; color:var(--pink-deep);
+    border:none; border-bottom:2px dashed var(--pink-light);
+    background:transparent; padding:6px 2px; flex:1; min-width:140px;
+  }
+  .classroom-title:focus{outline:none; border-bottom-color:var(--pink);}
+  .del-btn{
+    background:none; border:none; cursor:pointer;
+    font-size:18px; color:var(--ink-soft); padding:6px; border-radius:8px;
+  }
+  .del-btn:hover{background:var(--gray-light); color:#d64545;}
+
+  .week-meta{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:14px;
+  }
+  .week-label-input{
+    font-family:'Fredoka', sans-serif; font-weight:600; font-size:13.5px;
+    border:2px solid var(--blue-light); background:var(--blue-light); color:#1c6fa8;
+    border-radius:10px; padding:6px 10px; flex:1; min-width:120px;
+  }
+  .week-date-input{
+    border:2px solid var(--gray); border-radius:10px; padding:5px 8px; font-size:12.5px; color:var(--ink-soft);
+  }
+
+  /* ---------- Weekly Grid ---------- */
+  .grid-scroll{ overflow-x:auto; margin-bottom:16px; border-radius:14px; }
+  .week-grid{
+    display:grid;
+    grid-template-columns: 42px 58px repeat(5, minmax(96px,1fr));
+    gap:5px;
+    min-width:660px;
+  }
+  .hcell{
+    background:var(--pink-light);
+    border-radius:10px;
+    padding:6px 4px;
+    text-align:center;
+  }
+  .hcell input{
+    width:100%; text-align:center; border:none; background:transparent;
+    font-family:'Fredoka',sans-serif; font-weight:700; font-size:12.5px; color:var(--pink-deep);
+  }
+  .hcell input:focus{outline:none;}
+  .cell-num,.cell-time{
+    display:flex; align-items:center; justify-content:center;
+    background:var(--gray-light); border-radius:10px; padding:4px 2px;
+  }
+  .cell-num input, .cell-time input{
+    width:100%; text-align:center; border:none; background:transparent;
+    font-size:11.5px; font-weight:600; color:var(--ink-soft); font-family:'Fredoka',sans-serif;
+  }
+  .cell-time input{font-size:9.5px; padding:0;}
+  .cell-num input:focus, .cell-time input:focus{outline:none;}
+
+  .period-cell{
+    border-radius:12px; padding:6px 7px;
+    display:flex; flex-direction:column; gap:2px; position:relative;
+  }
+  .period-cell .top-row{display:flex; align-items:flex-start; gap:5px;}
+  .color-dot{
+    width:15px; height:15px; border-radius:50%; flex:none; cursor:pointer;
+    border:2px solid rgba(255,255,255,0.9); box-shadow:0 0 0 1px rgba(0,0,0,0.08);
+    margin-top:2px; display:inline-block;
+  }
+  textarea.autogrow{
+    resize:none; overflow:hidden; border:none; background:transparent;
+    width:100%; font-family:inherit; line-height:1.35; padding:0; margin:0;
+    display:block; color:inherit;
+  }
+  textarea.autogrow:focus{outline:none;}
+  .period-cell textarea.classname{
+    flex:1; min-width:0; font-size:10.5px; opacity:0.85;
+  }
+  .period-cell textarea.course, .period-cell div.course{
+    font-size:12.5px; font-family:'Fredoka',sans-serif; padding-left:18px; margin-top:2px;
+  }
+  .period-cell div.course[contenteditable]{
+    min-height:15px; word-break:break-word; white-space:pre-wrap;
+  }
+  .period-cell div.course[contenteditable]:focus{outline:none;}
+  .period-cell div.course[contenteditable]:empty:before{
+    content: attr(data-placeholder); opacity:0.45;
+  }
+  .period-cell input:focus{outline:none;}
+
+  /* ---------- Selection formatting mini toolbar ---------- */
+  .sel-toolbar{
+    position:fixed; display:none; align-items:center; gap:7px;
+    background:white; padding:7px 9px; border-radius:12px; box-shadow:var(--shadow);
+    z-index:95;
+  }
+  .sel-toolbar.show{display:flex;}
+  .sel-toolbar .csw-grid{ display:flex; gap:4px; }
+  .sel-toolbar .csw{
+    width:18px; height:18px; border-radius:50%; cursor:pointer;
+    border:2px solid rgba(0,0,0,0.06); box-shadow:0 0 0 1px rgba(0,0,0,0.04); flex:none;
+  }
+  .sel-toolbar .csep{ width:1px; align-self:stretch; background:var(--gray-light); }
+  .sel-toolbar .selbold-btn{
+    border:none; border-radius:8px; background:var(--gray-light); color:var(--ink);
+    font-weight:700; font-family:'Fredoka',sans-serif; font-size:12.5px;
+    padding:5px 9px; cursor:pointer; flex:none;
+  }
+  .sel-toolbar .selclear-btn{
+    border:none; border-radius:8px; background:none; color:var(--ink-soft);
+    font-size:15px; cursor:pointer; padding:3px 5px; flex:none;
+  }
+
+  /* ---------- Cell style popover ---------- */
+  .style-pop{
+    position:fixed; display:none; flex-direction:column; gap:6px;
+    background:white; padding:10px; border-radius:14px; box-shadow:var(--shadow);
+    z-index:90; width:236px; max-height:70vh; overflow-y:auto;
+  }
+  .style-pop.show{display:flex;}
+  .style-pop-label{ font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-top:2px; }
+  .swatch-grid{ display:flex; flex-wrap:wrap; gap:6px; }
+  .swatch{
+    width:22px; height:22px; border-radius:50%; cursor:pointer;
+    border:2px solid rgba(0,0,0,0.06); box-shadow:0 0 0 1px rgba(0,0,0,0.04);
+  }
+  .swatch.active{ border-color:var(--pink); box-shadow:0 0 0 2px var(--pink); }
+  .bold-toggle-row{
+    display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600;
+    color:var(--ink); margin-top:4px; cursor:pointer;
+  }
+  .bold-toggle-row input{ width:16px; height:16px; accent-color:var(--pink); }
+
+  .color-pop{
+    position:fixed; display:none; flex-direction:column; gap:4px;
+    background:white; padding:10px; border-radius:14px; box-shadow:var(--shadow);
+    z-index:90; width:216px; max-height:75vh; overflow-y:auto;
+  }
+  .color-pop.show{display:flex;}
+  .color-pop .pop-label{
+    font-size:11px; font-weight:700; color:var(--ink-soft); margin:4px 0 2px;
+    font-family:'Fredoka',sans-serif;
+  }
+  .swatch-grid{ display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; }
+  .swatch-grid span{
+    width:20px; height:20px; border-radius:50%; cursor:pointer;
+    border:2px solid white; box-shadow:0 0 0 1px rgba(0,0,0,0.1);
+  }
+  .swatch-grid span.selected{ box-shadow:0 0 0 2px var(--ink); }
+  .bold-btn{
+    margin-top:6px; width:100%; padding:7px; border:none; border-radius:8px;
+    background:var(--gray-light); font-weight:700; font-family:'Fredoka',sans-serif;
+    cursor:pointer; font-size:12.5px; color:var(--ink);
+  }
+  .bold-btn.active{ background:var(--pink); color:white; }
+  .pop-close{
+    margin-top:6px; width:100%; padding:6px; border:none; border-radius:8px;
+    background:transparent; color:var(--ink-soft); font-size:11.5px; cursor:pointer;
+  }
+
+  .break-row{
+    grid-column: 1 / -1;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    background:var(--pink-light); border-radius:10px; padding:5px 8px;
+  }
+  .break-row input.blabel{
+    border:none; background:transparent; font-weight:700; font-size:12px; color:var(--pink-deep);
+    text-align:center; font-family:'Fredoka',sans-serif; min-width:80px;
+  }
+  .break-row input.btime{
+    border:none; background:transparent; font-size:11px; color:var(--pink-deep); opacity:0.75;
+    text-align:center; width:100px;
+  }
+  .break-row input:focus{outline:none;}
+
+  /* ---------- Notes accordion ---------- */
+  details.note{ border-radius:14px; margin-bottom:8px; overflow:hidden; background:var(--gray-light); }
+  details.note[open]{background:var(--white); box-shadow:inset 0 0 0 2px var(--gray-light);}
+  details.note summary{
+    list-style:none; cursor:pointer; padding:10px 12px;
+    display:flex; align-items:center; gap:8px;
+    font-weight:700; font-size:13px; color:var(--ink);
+    -webkit-tap-highlight-color: transparent;
+  }
+  details.note summary::-webkit-details-marker{display:none;}
+  details.note summary .arrow{margin-left:auto; transition:transform .2s; font-size:11px; color:var(--ink-soft);}
+  details.note[open] summary .arrow{transform:rotate(90deg);}
+  .note-body{padding:2px 12px 12px;}
+  .note-body textarea{
+    width:100%; border:1.5px solid var(--gray); border-radius:10px;
+    padding:8px 10px; font-family:'Noto Sans TC',sans-serif; font-size:13px;
+    resize:vertical; min-height:52px; color:var(--ink);
+  }
+  .note-body textarea:focus{outline:none; border-color:var(--pink);}
+
+  .day-note-row{ display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; }
+  .day-note-label{
+    flex:none; width:54px; padding-top:8px; text-align:right;
+    font-size:11.5px; font-weight:700; color:var(--ink-soft); font-family:'Fredoka',sans-serif;
+  }
+  .day-note-row textarea{
+    flex:1; border:1.5px solid var(--gray); border-radius:10px;
+    padding:6px 9px; font-family:'Noto Sans TC',sans-serif; font-size:13px;
+    resize:vertical; min-height:36px; color:var(--ink);
+  }
+  .day-note-row textarea:focus{outline:none; border-color:var(--pink);}
+
+  .list-item{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
+  .list-item input[type=text]{
+    flex:1; border:1.5px solid var(--gray); border-radius:8px;
+    padding:7px 9px; font-size:13px; font-family:'Noto Sans TC',sans-serif;
+  }
+  .list-item input[type=text].link-title{flex:0.7;}
+  .list-item input[type=text].link-url{flex:1; color:#1c6fa8;}
+  .list-item input[type=text]:focus{outline:none; border-color:var(--blue);}
+  .list-item .rm{ background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:16px; padding:2px 6px; }
+  .list-item .rm:hover{color:#d64545;}
+  .add-row-btn{
+    background:var(--blue-light); color:#1c6fa8; border:none;
+    padding:7px 12px; border-radius:999px; font-size:12px; font-weight:700;
+    cursor:pointer; font-family:'Fredoka',sans-serif;
+  }
+  .add-row-btn:hover{filter:brightness(0.97);}
+  .todo-item{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
+  .todo-item input[type=checkbox]{width:18px; height:18px; accent-color:var(--pink);}
+  .todo-item input[type=text]{flex:1; border:1.5px solid var(--gray); border-radius:8px; padding:7px 9px; font-size:13px;}
+  .todo-item.done input[type=text]{text-decoration:line-through; color:var(--ink-soft);}
+  .link-row a{font-size:12px; color:#1c6fa8; word-break:break-all;}
+
+  .fab{
+    position:fixed; right:20px; bottom:26px; z-index:60;
+    background:linear-gradient(135deg, var(--pink), var(--pink-deep));
+    color:white; border:none; border-radius:999px;
+    padding:15px 22px; font-size:14.5px; font-weight:700;
+    font-family:'Fredoka',sans-serif;
+    box-shadow:0 10px 24px rgba(232,85,137,0.45);
+    cursor:pointer; display:flex; align-items:center; gap:6px;
+  }
+  .fab:hover{transform:translateY(-2px);}
+  .fab:active{transform:translateY(0);}
+
+  .toast{
+    position:fixed; bottom:100px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:white; padding:8px 16px; border-radius:999px;
+    font-size:12px; opacity:0; transition:opacity .3s; z-index:70; pointer-events:none;
+  }
+  .toast.show{opacity:0.92;}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="deco" style="left:14px; top:14px;">☁️</span>
+  <span class="deco" style="right:14px; top:10px;">🌤️</span>
+  <h1>課程進度表</h1>
+  <p>每週課表 · 教學紀錄與待辦事項</p>
+</div>
+
+<div class="toolbar">
+  <button class="tool-btn save" id="saveBtn">💾 儲存</button>
+  <button class="tool-btn restore" id="restoreBtn">↩️ 還原上次儲存</button>
+  <span class="save-status" id="saveStatus">尚未儲存</span>
+</div>
+
+<div class="wrap" id="cardsWrap">
+  <div class="empty-state" id="emptyState">
+    <div class="big">🦋</div>
+    正在載入課表...
+  </div>
+</div>
+
+<button class="fab" id="addBtn">✚ 新增一週課表</button>
+<button class="jump-fab" id="jumpBtn">📍 本週</button>
+<div class="toast" id="toast"></div>
+<div class="sel-toolbar" id="selToolbar"></div>
+
+<script>
+const PALETTE = [
+  // 莫蘭迪色系
+  '#D8CAB8','#C9B8A8','#B7A99A','#A9BCA0','#9CAFAA','#B7A6C9','#C7A9A9',
+  '#A9A9B7','#BFCDBB','#D3C0B0','#AEB7A6','#C4B7C4','#B9CBC0','#CBB4B4',
+  // 沙漠玫瑰＆霧感柔色系
+  '#D9A6A0','#E0B8AE','#D8B4C0','#C9A66B','#B99470','#CBB89D','#A8B79A',
+  '#9FB8B0','#A8A0B8','#C4A5A5','#D6C0A8','#B0A8C4','#C9B29B','#A8B8C4'
+];
+const TEXT_COLORS = [
+  '#4A4258','#6B5B4A','#5A6B5A','#4A5A6B','#6B4A5A','#2E2E38','#FFFFFF',
+  '#8A3B5C','#3B6B8A','#8A6A3B','#3B8A5C','#6B3B8A','#B23B5C','#3B5CB2','#BE5A46'
+];
+const STORAGE_KEY = 'nature-class-weekly-schedules';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA1xjQ1eXF7cFc6W2AenQWSWxPxEnmhSII",
+  authDomain: "schedule-1eb79.firebaseapp.com",
+  projectId: "schedule-1eb79",
+  storageBucket: "schedule-1eb79.firebasestorage.app",
+  messagingSenderId: "117653777546",
+  appId: "1:117653777546:web:427ff396f30594b1001173",
+  measurementId: "G-2KHEMS1W9N"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const CLOUD_DOC = db.collection('schedules').doc('main');
+let cards = [];
+let loaded = false;
+let expandedIds = new Set();
+
+function uid(){ return 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function defaultCard(){
+  const cells = {};
+  [1,2,3,4,5,6,7].forEach((n,ri)=>{
+    cells[n] = {};
+    for(let d=0; d<5; d++){
+      cells[n][d] = { course:'', className:'', color: PALETTE[(ri+d) % PALETTE.length], textColor: '#4A4258', bold: true, classNameBold: false };
+    }
+  });
+  return {
+    id: uid(),
+    classroomTitle: '自然教室課表',
+    weekLabel: '',
+    weekStart: '',
+    colLabels: { period:'節次', time:'Time' },
+    days: ['Monday','Tuesday','Wednesday','Thursday','Friday'],
+    periodNums: {1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7'},
+    periodTimes: {1:'8:40~9:20',2:'9:30~10:10',3:'10:30~11:10',4:'11:20~12:00',5:'13:10~13:50',6:'14:00~14:40',7:'14:50~15:30'},
+    breaksA: [ {label:'午餐、潔牙', time:'12:00~12:30'}, {label:'午休時間', time:'12:30~13:05'} ],
+    breaksB: [ {label:'整潔時間', time:'15:30~15:50'}, {label:'降旗放學', time:'15:50~16:00'} ],
+    cells,
+    notes: {
+      highlights: {0:'',1:'',2:'',3:'',4:''},
+      absentStudents: {0:'',1:'',2:'',3:'',4:''},
+      missingHW: {0:'',1:'',2:'',3:'',4:''},
+      precautions: '',
+      equipment: '',
+      links: [],
+      todos: []
+    }
+  };
+}
+
+function getCard(id){ return cards.find(c=>c.id===id); }
+
+function setStatus(text){
+  const el = document.getElementById('saveStatus');
+  if(el) el.textContent = text;
+}
+
+const BACKUP_KEY = STORAGE_KEY + '-backup';
+
+function saveState(manual=false){
+  const payload = JSON.stringify(cards);
+  let success = false;
+  try{
+    // keep a backup of whatever was there before, then write the new state
+    const prev = localStorage.getItem(STORAGE_KEY);
+    if(prev !== null) localStorage.setItem(BACKUP_KEY, prev);
+    localStorage.setItem(STORAGE_KEY, payload);
+    success = true;
+  }catch(e){
+    console.error('save failed', e);
+  }
+
+  // push to Firebase cloud so other devices can pick it up (fire-and-forget)
+  CLOUD_DOC.set({
+    data: payload,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(()=>{
+    if(manual) showToast('✅ 已存檔並同步到雲端');
+  }).catch(err=>{
+    console.error('cloud save failed', err);
+    showToast('⚠️ 雲端同步失敗，已存在本機');
+  });
+
+  if(success){
+    const now = new Date();
+    const pad = n=>String(n).padStart(2,'0');
+    setStatus(`已儲存 ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`);
+    if(manual && false) showToast('✅ 已儲存'); // superseded by cloud-aware toast above
+  }else{
+    setStatus('⚠️ 儲存失敗（瀏覽器可能封鎖了儲存功能）');
+    showToast('❌ 儲存失敗，請確認瀏覽器允許本機儲存');
+  }
+  return success;
+}
+
+function normalizeDayField(val){
+  // migrate old single-string notes into per-weekday objects
+  if(val && typeof val === 'object') return val;
+  const obj = {0:'',1:'',2:'',3:'',4:''};
+  if(typeof val === 'string' && val) obj[0] = val;
+  return obj;
+}
+
+function normalizeCard(c){
+  c.notes = c.notes || {};
+  c.notes.highlights = normalizeDayField(c.notes.highlights);
+  c.notes.absentStudents = normalizeDayField(c.notes.absentStudents);
+  c.notes.missingHW = normalizeDayField(c.notes.missingHW);
+  c.notes.precautions = c.notes.precautions || '';
+  c.notes.equipment = c.notes.equipment || '';
+  c.notes.links = c.notes.links || [];
+  c.notes.todos = c.notes.todos || [];
+  if(c.cells){
+    Object.keys(c.cells).forEach(n=>{
+      Object.keys(c.cells[n]).forEach(d=>{
+        const cell = c.cells[n][d];
+        if(cell.textColor === undefined) cell.textColor = '#4A4258';
+        if(cell.bold === undefined) cell.bold = true;
+        if(cell.classNameBold === undefined) cell.classNameBold = false;
+        // migrate legacy plain-text course into rich-text HTML (so per-selection color/bold works)
+        if(cell.course && cell.course.indexOf('<') === -1){
+          cell.course = escapeHTML(cell.course).replace(/\n/g,'<br>');
+        }
+        if(cell.course === undefined || cell.course === null) cell.course = '';
+      });
+    });
+  }
+  return c;
+}
+
+function applyLoadedCards(rawCards, statusMsg){
+  cards = rawCards.map(normalizeCard);
+  loaded = true;
+  const curId = findCurrentCardId();
+  expandedIds = new Set();
+  if(curId) expandedIds.add(curId);
+  render();
+  if(curId) setTimeout(()=>scrollToCard(curId), 200);
+  if(statusMsg) setStatus(statusMsg);
+}
+
+function loadState(){
+  // 1) show whatever is on this device immediately (fast, works offline)
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    applyLoadedCards(raw ? JSON.parse(raw) : [], raw ? '已載入本機課表，正在連線雲端…' : '尚未儲存');
+  }catch(e){
+    console.error('load failed', e);
+    applyLoadedCards([], '尚未儲存');
+  }
+
+  // 2) then check the cloud for the latest version from any device
+  CLOUD_DOC.get().then(snap=>{
+    if(snap.exists && snap.data() && snap.data().data){
+      const cloudCards = JSON.parse(snap.data().data);
+      applyLoadedCards(cloudCards, '☁️ 已同步雲端最新資料');
+      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudCards)); }catch(e){}
+    }else{
+      setStatus(cards.length ? '已載入本機課表（雲端尚無資料）' : '尚未儲存');
+    }
+  }).catch(err=>{
+    console.error('cloud load failed', err);
+    setStatus('⚠️ 無法連線雲端，目前顯示本機資料');
+  });
+}
+
+function restoreFromBackup(){
+  try{
+    const raw = localStorage.getItem(BACKUP_KEY);
+    if(raw === null){ showToast('沒有可還原的備份'); return; }
+    cards = JSON.parse(raw).map(normalizeCard);
+    localStorage.setItem(STORAGE_KEY, raw);
+    setStatus('已還原上一版本');
+    const curId = findCurrentCardId();
+    expandedIds = new Set();
+    if(curId) expandedIds.add(curId);
+    render();
+    showToast('↩️ 已還原成上一次儲存的版本');
+  }catch(e){
+    console.error('restore failed', e);
+    showToast('❌ 還原失敗');
+  }
+}
+
+let saveTimer = null;
+function debouncedSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>saveState(), 500);
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1600);
+}
+
+document.getElementById('saveBtn').addEventListener('click', ()=>{ saveState(true); });
+document.getElementById('restoreBtn').addEventListener('click', ()=>{
+  if(!confirm('這會把畫面還原成「上一次儲存」的版本，目前尚未儲存的變更將會消失，確定要還原嗎？')) return;
+  restoreFromBackup();
+});
+
+function fmtDate(d){ return (d.getMonth()+1) + '/' + d.getDate(); }
+function weekRangeLabel(startStr){
+  if(!startStr) return '';
+  const d = new Date(startStr + 'T00:00:00');
+  if(isNaN(d)) return '';
+  const end = new Date(d); end.setDate(d.getDate()+4);
+  return fmtDate(d) + ' - ' + fmtDate(end);
+}
+
+function latestDatedCard(){
+  const dated = cards.filter(c=>c.weekStart).sort((a,b)=>a.weekStart.localeCompare(b.weekStart));
+  return dated.length ? dated[dated.length-1] : null;
+}
+
+function addCard(){
+  const c = defaultCard();
+  const ref = latestDatedCard() || cards[0];
+  if(ref){
+    c.classroomTitle = ref.classroomTitle;
+    c.days = ref.days.slice();
+    c.colLabels = {...ref.colLabels};
+    c.periodNums = {...ref.periodNums};
+    c.periodTimes = {...ref.periodTimes};
+    c.breaksA = ref.breaksA.map(b=>({...b}));
+    c.breaksB = ref.breaksB.map(b=>({...b}));
+    if(ref.weekStart){
+      const d = new Date(ref.weekStart + 'T00:00:00');
+      d.setDate(d.getDate()+7);
+      c.weekStart = d.toISOString().slice(0,10);
+      c.weekLabel = weekRangeLabel(c.weekStart);
+    }
+  }
+  cards.push(c);
+  expandedIds.add(c.id);
+  render(); saveState();
+  setTimeout(()=>scrollToCard(c.id), 60);
+}
+
+function removeCard(id){
+  if(!confirm('確定要刪除這週的課表嗎？')) return;
+  cards = cards.filter(c=>c.id!==id);
+  render(); saveState();
+}
+
+function escapeAttr(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function escapeHTML(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function periodRowHTML(card, n){
+  const time = card.periodTimes[n];
+  const num = card.periodNums[n];
+  let daysHTML = '';
+  for(let d=0; d<5; d++){
+    const cell = card.cells[n][d];
+    const weight = cell.bold===false ? '400' : '700';
+    const classNameWeight = cell.classNameBold ? '700' : '400';
+    daysHTML += `
+    <div class="period-cell" style="background:${cell.color}; color:${cell.textColor||'#4A4258'};">
+      <div class="top-row">
+        <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
+        <textarea class="classname autogrow" rows="1" placeholder="班級" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
+      </div>
+      <div class="course" contenteditable="true" data-placeholder="課程" style="font-weight:${weight}" data-role="course" data-card="${card.id}" data-period="${n}" data-day="${d}">${cell.course||''}</div>
+    </div>`;
+  }
+  return `
+  <div class="cell-num"><input type="text" value="${escapeAttr(num)}" data-role="periodnum" data-card="${card.id}" data-period="${n}"></div>
+  <div class="cell-time"><input type="text" value="${escapeAttr(time)}" data-role="periodtime" data-card="${card.id}" data-period="${n}"></div>
+  ${daysHTML}`;
+}
+
+function breakRowHTML(card, group, idx){
+  const b = card[group][idx];
+  return `
+  <div class="break-row">
+    <input class="blabel" type="text" value="${escapeAttr(b.label)}" data-role="breaklabel" data-card="${card.id}" data-group="${group}" data-idx="${idx}">
+    <input class="btime" type="text" value="${escapeAttr(b.time)}" data-role="breaktime" data-card="${card.id}" data-group="${group}" data-idx="${idx}">
+  </div>`;
+}
+
+function noteSection(cardId, key, icon, label, placeholder){
+  const val = getCard(cardId).notes[key] || '';
+  return `
+  <details class="note">
+    <summary>${icon} ${label} <span class="arrow">▶</span></summary>
+    <div class="note-body">
+      <textarea placeholder="${placeholder}" data-role="notefield" data-card="${cardId}" data-key="${key}">${escapeHTML(val)}</textarea>
+    </div>
+  </details>`;
+}
+
+function dayNoteSection(cardId, key, icon, label, placeholder){
+  const card = getCard(cardId);
+  const data = card.notes[key] || {};
+  const rows = card.days.map((day,d)=>`
+    <div class="day-note-row">
+      <span class="day-note-label">${escapeHTML(day)}</span>
+      <textarea placeholder="${placeholder}" data-role="daynotefield" data-card="${cardId}" data-key="${key}" data-day="${d}">${escapeHTML(data[d]||'')}</textarea>
+    </div>`).join('');
+  return `
+  <details class="note">
+    <summary>${icon} ${label} <span class="arrow">▶</span></summary>
+    <div class="note-body">${rows}</div>
+  </details>`;
+}
+
+function linksSection(card){
+  const links = card.notes.links || [];
+  const rows = links.map((l,i)=>`
+    <div class="list-item">
+      <input type="text" class="link-title" placeholder="標題" value="${escapeAttr(l.title)}" data-role="link-title" data-card="${card.id}" data-idx="${i}">
+      <input type="text" class="link-url" placeholder="https://..." value="${escapeAttr(l.url)}" data-role="link-url" data-card="${card.id}" data-idx="${i}">
+      <button class="rm" data-role="link-rm" data-card="${card.id}" data-idx="${i}">✕</button>
+    </div>`).join('');
+  const linkList = links.filter(l=>l.url).map(l=>`<div class="link-row">🔗 <a href="${escapeAttr(l.url)}" target="_blank" rel="noopener">${escapeHTML(l.title||l.url)}</a></div>`).join('');
+  return `
+  <details class="note">
+    <summary>🔗 相關網頁 <span class="arrow">▶</span></summary>
+    <div class="note-body">
+      ${rows}
+      <button class="add-row-btn" data-role="link-add" data-card="${card.id}">＋ 新增連結</button>
+      ${linkList ? `<div style="margin-top:8px;">${linkList}</div>` : ''}
+    </div>
+  </details>`;
+}
+
+function todosSection(card){
+  const todos = card.notes.todos || [];
+  const rows = todos.map((t,i)=>`
+    <div class="todo-item ${t.done?'done':''}">
+      <input type="checkbox" ${t.done?'checked':''} data-role="todo-check" data-card="${card.id}" data-idx="${i}">
+      <input type="text" placeholder="待辦事項" value="${escapeAttr(t.text)}" data-role="todo-text" data-card="${card.id}" data-idx="${i}">
+      <button class="rm" data-role="todo-rm" data-card="${card.id}" data-idx="${i}">✕</button>
+    </div>`).join('');
+  return `
+  <details class="note">
+    <summary>✅ 待完成事項 <span class="arrow">▶</span></summary>
+    <div class="note-body">
+      ${rows}
+      <button class="add-row-btn" data-role="todo-add" data-card="${card.id}">＋ 新增待辦</button>
+    </div>
+  </details>`;
+}
+
+function cardHTML(card){
+  let gridRows = '';
+  gridRows += `<div class="hcell"><input type="text" value="${escapeAttr(card.colLabels.period)}" data-role="collabel" data-card="${card.id}" data-key="period"></div>`;
+  gridRows += `<div class="hcell"><input type="text" value="${escapeAttr(card.colLabels.time)}" data-role="collabel" data-card="${card.id}" data-key="time"></div>`;
+  card.days.forEach((day,d)=>{
+    gridRows += `<div class="hcell"><input type="text" value="${escapeAttr(day)}" data-role="daylabel" data-card="${card.id}" data-day="${d}"></div>`;
+  });
+
+  [1,2,3,4].forEach(n=>{ gridRows += periodRowHTML(card, n); });
+  gridRows += breakRowHTML(card,'breaksA',0);
+  gridRows += breakRowHTML(card,'breaksA',1);
+  [5,6,7].forEach(n=>{ gridRows += periodRowHTML(card, n); });
+  gridRows += breakRowHTML(card,'breaksB',0);
+  gridRows += breakRowHTML(card,'breaksB',1);
+
+  const wlabel = card.weekLabel || weekRangeLabel(card.weekStart);
+  const expanded = expandedIds.has(card.id);
+  const current = isCurrentWeek(card);
+
+  return `
+  <div class="day-card ${expanded ? '' : 'collapsed'} ${current ? 'current' : ''}" id="card-${card.id}">
+    <div class="pin"></div>
+    <div class="card-head">
+      <span class="toggle-arrow" data-role="toggle" data-card="${card.id}">▾</span>
+      <input class="classroom-title" type="text" placeholder="教室名稱 / 課表標題" value="${escapeAttr(card.classroomTitle)}" data-role="classroomTitle" data-card="${card.id}">
+      <span class="week-badge" data-role="toggle" data-card="${card.id}">${escapeHTML(wlabel || '尚未設定日期')}${current ? ' · 本週' : ''}</span>
+      <button class="del-btn" data-role="delete" data-card="${card.id}">🗑️</button>
+    </div>
+    <div class="card-body" ${expanded ? '' : 'style="display:none;"'}>
+      <div class="week-meta">
+        <input class="week-label-input" type="text" placeholder="週次說明，例如：第1週 / 9/1-9/5" value="${escapeAttr(wlabel)}" data-role="weekLabel" data-card="${card.id}">
+        <input class="week-date-input" type="date" value="${card.weekStart||''}" data-role="weekStart" data-card="${card.id}" title="選擇週一日期可自動帶入日期區間">
+      </div>
+
+      <div class="grid-scroll">
+        <div class="week-grid">${gridRows}</div>
+      </div>
+
+      ${dayNoteSection(card.id,'highlights','⭐','課程重點','本日重點...')}
+      ${linksSection(card)}
+      ${noteSection(card.id,'precautions','⚠️','注意事項','需要留意的事項...')}
+      ${dayNoteSection(card.id,'missingHW','📝','缺交作業','本日缺交作業...')}
+      ${dayNoteSection(card.id,'absentStudents','🙋','缺席學生','本日缺席學生...')}
+      ${noteSection(card.id,'equipment','🧪','實驗器材','需要準備的器材...')}
+      ${todosSection(card)}
+    </div>
+  </div>`;
+}
+
+function autoGrowEl(el){
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+function todayISO(){
+  const d = new Date();
+  const pad = n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+function isCurrentWeek(card){
+  if(!card.weekStart) return false;
+  const start = new Date(card.weekStart + 'T00:00:00');
+  if(isNaN(start)) return false;
+  const end = new Date(start); end.setDate(start.getDate()+6);
+  const now = new Date(); now.setHours(0,0,0,0);
+  return now >= start && now <= end;
+}
+
+function findCurrentCardId(){
+  const hit = cards.find(isCurrentWeek);
+  if(hit) return hit.id;
+  const dated = cards.filter(c=>c.weekStart).sort((a,b)=>a.weekStart.localeCompare(b.weekStart));
+  if(!dated.length) return cards[0] ? cards[0].id : null;
+  const today = todayISO();
+  const upcoming = dated.find(c=>c.weekStart >= today);
+  return upcoming ? upcoming.id : dated[dated.length-1].id;
+}
+
+function sortedCardsForRender(){
+  return [...cards].sort((a,b)=>{
+    const aw = a.weekStart, bw = b.weekStart;
+    if(!aw && !bw) return 0;
+    if(!aw) return -1; // undated cards float to top so they're easy to notice and fill in
+    if(!bw) return 1;
+    return aw.localeCompare(bw);
+  });
+}
+
+function scrollToCard(id){
+  const el = document.getElementById('card-'+id);
+  if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function render(){
+  const wrap = document.getElementById('cardsWrap');
+  if(!loaded) return;
+  if(cards.length === 0){
+    wrap.innerHTML = `<div class="empty-state"><div class="big">🌸</div>還沒有課表，點右下角「新增一週課表」開始吧！</div>`;
+    return;
+  }
+  wrap.innerHTML = sortedCardsForRender().map(cardHTML).join('');
+  wrap.querySelectorAll('textarea.autogrow').forEach(autoGrowEl);
+}
+
+document.getElementById('addBtn').addEventListener('click', addCard);
+document.getElementById('jumpBtn').addEventListener('click', ()=>{
+  const id = findCurrentCardId();
+  if(!id){ showToast('目前還沒有已排定日期的課表'); return; }
+  expandedIds.add(id);
+  render();
+  setTimeout(()=>scrollToCard(id), 60);
+});
+
+document.getElementById('cardsWrap').addEventListener('input', (e)=>{
+  const t = e.target;
+  if(t.classList && t.classList.contains('autogrow')){
+    autoGrowEl(t);
+  }
+  if(t.dataset && t.dataset.role === 'course'){
+    const card = getCard(t.dataset.card);
+    if(card){
+      card.cells[t.dataset.period][t.dataset.day].course = t.innerHTML;
+      debouncedSave();
+    }
+  }
+});
+
+document.getElementById('cardsWrap').addEventListener('click', (e)=>{
+  const t = e.target;
+  const role = t.dataset.role;
+  if(!role) return;
+  const cardId = t.dataset.card;
+  const card = getCard(cardId);
+  if(role === 'delete'){ removeCard(cardId); return; }
+  if(role === 'toggle'){
+    if(expandedIds.has(cardId)) expandedIds.delete(cardId); else expandedIds.add(cardId);
+    render();
+    return;
+  }
+  if(role === 'cellstyle'){ e.stopPropagation(); openCellStylePopover(t, cardId, t.dataset.period, t.dataset.day); return; }
+  if(role === 'link-add'){ card.notes.links.push({title:'', url:''}); render(); saveState(); return; }
+  if(role === 'link-rm'){ card.notes.links.splice(Number(t.dataset.idx),1); render(); saveState(); return; }
+  if(role === 'todo-add'){ card.notes.todos.push({text:'', done:false}); render(); saveState(); return; }
+  if(role === 'todo-rm'){ card.notes.todos.splice(Number(t.dataset.idx),1); render(); saveState(); return; }
+});
+
+document.getElementById('cardsWrap').addEventListener('change', (e)=>{
+  const t = e.target;
+  const role = t.dataset.role;
+  if(!role) return;
+  const cardId = t.dataset.card;
+  const card = getCard(cardId);
+  if(!card) return;
+  const p = t.dataset.period, d = t.dataset.day, idx = t.dataset.idx;
+
+  if(role === 'classroomTitle'){ card.classroomTitle = t.value; saveState(); return; }
+  if(role === 'weekLabel'){ card.weekLabel = t.value; saveState(); return; }
+  if(role === 'weekStart'){ card.weekStart = t.value; card.weekLabel = weekRangeLabel(t.value); render(); saveState(); return; }
+  if(role === 'collabel'){ card.colLabels[t.dataset.key] = t.value; saveState(); return; }
+  if(role === 'daylabel'){ card.days[Number(d)] = t.value; saveState(); return; }
+  if(role === 'periodnum'){ card.periodNums[p] = t.value; saveState(); return; }
+  if(role === 'periodtime'){ card.periodTimes[p] = t.value; saveState(); return; }
+  if(role === 'classname'){ card.cells[p][d].className = t.value; saveState(); return; }
+  if(role === 'breaklabel'){ card[t.dataset.group][idx].label = t.value; saveState(); return; }
+  if(role === 'breaktime'){ card[t.dataset.group][idx].time = t.value; saveState(); return; }
+  if(role === 'notefield'){ card.notes[t.dataset.key] = t.value; saveState(); return; }
+  if(role === 'daynotefield'){ card.notes[t.dataset.key][d] = t.value; saveState(); return; }
+  if(role === 'link-title'){ card.notes.links[idx].title = t.value; saveState(); return; }
+  if(role === 'link-url'){ card.notes.links[idx].url = t.value; render(); saveState(); return; }
+  if(role === 'todo-text'){ card.notes.todos[idx].text = t.value; saveState(); return; }
+  if(role === 'todo-check'){ card.notes.todos[idx].done = t.checked; render(); saveState(); return; }
+});
+
+function openCellStylePopover(anchor, cardId, periodN, dayIdx){
+  document.querySelectorAll('.style-pop').forEach(p=>p.remove());
+  const card = getCard(cardId);
+  const cell = card.cells[periodN][dayIdx];
+
+  const pop = document.createElement('div');
+  pop.className = 'style-pop show';
+
+  const bgLabel = document.createElement('div');
+  bgLabel.className = 'style-pop-label';
+  bgLabel.textContent = '背景顏色';
+  pop.appendChild(bgLabel);
+
+  const bgGrid = document.createElement('div');
+  bgGrid.className = 'swatch-grid';
+  PALETTE.forEach(c=>{
+    const sw = document.createElement('span');
+    sw.className = 'swatch' + (c===cell.color ? ' active' : '');
+    sw.style.background = c;
+    sw.addEventListener('click', ()=>{
+      cell.color = c;
+      bgGrid.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
+      sw.classList.add('active');
+      render(); saveState();
+    });
+    bgGrid.appendChild(sw);
+  });
+  pop.appendChild(bgGrid);
+
+  const textLabel = document.createElement('div');
+  textLabel.className = 'style-pop-label';
+  textLabel.textContent = '文字顏色';
+  pop.appendChild(textLabel);
+
+  const textGrid = document.createElement('div');
+  textGrid.className = 'swatch-grid';
+  TEXT_COLORS.forEach(c=>{
+    const sw = document.createElement('span');
+    sw.className = 'swatch' + (c===cell.textColor ? ' active' : '');
+    sw.style.background = c;
+    if(c === '#FFFFFF') sw.style.border = '2px solid #ddd';
+    sw.addEventListener('click', ()=>{
+      cell.textColor = c;
+      textGrid.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
+      sw.classList.add('active');
+      render(); saveState();
+    });
+    textGrid.appendChild(sw);
+  });
+  pop.appendChild(textGrid);
+
+  const boldRow = document.createElement('label');
+  boldRow.className = 'bold-toggle-row';
+  boldRow.innerHTML = `<input type="checkbox" ${cell.bold ? 'checked' : ''}><span>課程粗體</span>`;
+  boldRow.querySelector('input').addEventListener('change', (e)=>{
+    cell.bold = e.target.checked;
+    render(); saveState();
+  });
+  pop.appendChild(boldRow);
+
+  const classBoldRow = document.createElement('label');
+  classBoldRow.className = 'bold-toggle-row';
+  classBoldRow.innerHTML = `<input type="checkbox" ${cell.classNameBold ? 'checked' : ''}><span>班級粗體</span>`;
+  classBoldRow.querySelector('input').addEventListener('change', (e)=>{
+    cell.classNameBold = e.target.checked;
+    render(); saveState();
+  });
+  pop.appendChild(classBoldRow);
+
+  document.body.appendChild(pop);
+  const r = anchor.getBoundingClientRect();
+  const popW = 236;
+  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - popW - 8)) + 'px';
+  pop.style.top = (r.bottom + 6) + 'px';
+
+  const closeOnce = (ev)=>{
+    if(!pop.contains(ev.target) && ev.target !== anchor){
+      pop.remove();
+      document.removeEventListener('click', closeOnce);
+    }
+  };
+  setTimeout(()=>document.addEventListener('click', closeOnce), 10);
+}
+
+/* ---------- Selection-based partial color / bold toolbar ---------- */
+let activeCourseEl = null;
+let savedRange = null;
+
+function buildSelToolbar(){
+  const bar = document.getElementById('selToolbar');
+  let html = '<div class="csw-grid">';
+  TEXT_COLORS.forEach(c=>{
+    const borderExtra = c === '#FFFFFF' ? 'border:2px solid #ddd;' : '';
+    html += `<span class="csw" data-color="${c}" style="background:${c};${borderExtra}"></span>`;
+  });
+  html += '</div><div class="csep"></div><button type="button" class="selbold-btn" id="selBoldBtn">B</button><button type="button" class="selclear-btn" id="selClearBtn" title="清除此段格式">⨯</button>';
+  bar.innerHTML = html;
+
+  bar.querySelectorAll('.csw').forEach(sw=>{
+    sw.addEventListener('pointerdown', e=>e.preventDefault());
+    sw.addEventListener('click', ()=>applyToSelection('foreColor', sw.dataset.color));
+  });
+  const boldBtn = document.getElementById('selBoldBtn');
+  boldBtn.addEventListener('pointerdown', e=>e.preventDefault());
+  boldBtn.addEventListener('click', ()=>applyToSelection('bold'));
+
+  const clearBtn = document.getElementById('selClearBtn');
+  clearBtn.addEventListener('pointerdown', e=>e.preventDefault());
+  clearBtn.addEventListener('click', ()=>applyToSelection('removeFormat'));
+}
+buildSelToolbar();
+
+function applyToSelection(cmd, val){
+  if(!activeCourseEl || !savedRange) return;
+  activeCourseEl.focus();
+  // restore the selection explicitly — tapping the toolbar can otherwise collapse it
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(savedRange);
+  try{
+    document.execCommand('styleWithCSS', false, true);
+    document.execCommand(cmd, false, val || null);
+  }catch(err){ console.error('format failed', err); }
+  const card = getCard(activeCourseEl.dataset.card);
+  if(card){
+    card.cells[activeCourseEl.dataset.period][activeCourseEl.dataset.day].course = activeCourseEl.innerHTML;
+    debouncedSave();
+  }
+  // refresh the saved range to match the (possibly now-different) selection
+  const sel2 = window.getSelection();
+  savedRange = (sel2 && sel2.rangeCount) ? sel2.getRangeAt(0).cloneRange() : null;
+}
+
+function hideSelToolbar(){
+  document.getElementById('selToolbar').classList.remove('show');
+  activeCourseEl = null;
+  savedRange = null;
+}
+
+function positionSelToolbar(rect){
+  const bar = document.getElementById('selToolbar');
+  bar.classList.add('show');
+  const barW = bar.offsetWidth || 190;
+  const left = Math.max(8, Math.min(rect.left, window.innerWidth - barW - 8));
+  const top = Math.max(8, rect.top - 48);
+  bar.style.left = left + 'px';
+  bar.style.top = top + 'px';
+}
+
+document.addEventListener('selectionchange', ()=>{
+  const sel = window.getSelection();
+  if(!sel || sel.rangeCount === 0 || sel.isCollapsed || !sel.toString()){
+    // don't hide immediately on collapse — the toolbar itself causes a brief collapse when tapped;
+    // only hide if focus isn't on our toolbar or the course field
+    const active = document.activeElement;
+    if(!active || (!active.closest || (!active.closest('#selToolbar') && !active.closest('.course[contenteditable]')))){
+      hideSelToolbar();
+    }
+    return;
+  }
+  let node = sel.anchorNode;
+  const el = node && (node.nodeType === 3 ? node.parentElement : node);
+  const courseEl = el && el.closest ? el.closest('.course[contenteditable]') : null;
+  if(!courseEl){ hideSelToolbar(); return; }
+  activeCourseEl = courseEl;
+  savedRange = sel.getRangeAt(0).cloneRange();
+  const rect = sel.getRangeAt(0).getBoundingClientRect();
+  positionSelToolbar(rect);
+});
+
+document.addEventListener('mousedown', (e)=>{
+  if(!e.target.closest('#selToolbar') && !e.target.closest('.course[contenteditable]')){
+    hideSelToolbar();
+  }
+});
+
+loadState();
+</script>
+</body>
+</html>
