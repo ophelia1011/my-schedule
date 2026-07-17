@@ -1029,14 +1029,17 @@ function buildSelToolbar(){
 
   bar.querySelectorAll('.csw').forEach(sw=>{
     sw.addEventListener('pointerdown', e=>e.preventDefault());
+    sw.addEventListener('mousedown', e=>e.preventDefault());
     sw.addEventListener('click', ()=>applyToSelection('foreColor', sw.dataset.color));
   });
   const boldBtn = document.getElementById('selBoldBtn');
   boldBtn.addEventListener('pointerdown', e=>e.preventDefault());
+  boldBtn.addEventListener('mousedown', e=>e.preventDefault());
   boldBtn.addEventListener('click', ()=>applyToSelection('bold'));
 
   const clearBtn = document.getElementById('selClearBtn');
   clearBtn.addEventListener('pointerdown', e=>e.preventDefault());
+  clearBtn.addEventListener('mousedown', e=>e.preventDefault());
   clearBtn.addEventListener('click', ()=>applyToSelection('removeFormat'));
 }
 buildSelToolbar();
