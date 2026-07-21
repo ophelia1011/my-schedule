@@ -12,6 +12,7 @@
     --course-font-size: 12.5px;
     --period-font-size: 11.5px;
     --note-font-size: 13px;
+    --break-font-size: 12px;
     --pink: #FF6FA0;
     --pink-deep: #E85589;
     --pink-light: #FFD6E8;
@@ -94,17 +95,23 @@
   .period-cell.multiselectable .color-dot{ pointer-events:none; }
 
   .multiselect-bar{
-    position:fixed; left:12px; right:12px; bottom:96px; z-index:85;
-    display:none; flex-direction:column; gap:8px; align-items:center;
-    background:white; border-radius:14px; padding:12px 14px;
-    box-shadow:var(--shadow); font-size:13px; color:var(--ink); text-align:center;
+    position:fixed; left:12px; right:12px; bottom:20px; z-index:85;
+    display:none; flex-direction:column; gap:6px;
+    background:white; border-radius:14px; padding:8px 10px;
+    box-shadow:var(--shadow); font-size:12.5px; color:var(--ink);
     border:2px solid var(--purple-light);
   }
   .multiselect-bar.show{display:flex;}
-  .multiselect-bar .swatch-grid{justify-content:center;}
+  .multiselect-bar .ms-toprow{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .multiselect-bar .ms-scroll{
+    display:flex; gap:6px; overflow-x:auto; padding:2px 0;
+    -webkit-overflow-scrolling:touch;
+  }
+  .multiselect-bar .ms-scroll .swatch{ flex:none; }
   .multiselect-bar .msclose{
     border:none; border-radius:10px; padding:6px 12px; font-size:12.5px;
     background:var(--gray-light); color:var(--ink); cursor:pointer; font-family:'Fredoka',sans-serif;
+    flex:none;
   }
   .save-status{ font-size:11.5px; color:var(--ink-soft); margin-left:auto; }
 
@@ -184,7 +191,7 @@
   .grid-scroll{ overflow-x:auto; margin-bottom:16px; border-radius:14px; }
   .week-grid{
     display:grid;
-    grid-template-columns: minmax(34px,48px) minmax(42px,64px) repeat(5, minmax(96px,1fr));
+    grid-template-columns: max-content max-content repeat(5, minmax(96px,1fr));
     gap:5px;
     min-width:660px;
   }
@@ -193,22 +200,24 @@
     border-radius:10px;
     padding:6px 4px;
     text-align:center;
-    display:flex; align-items:center; justify-content:center; gap:3px;
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
   }
-  .color-dot.header-dot{width:10px; height:10px;}
+  .color-dot.header-dot{ position:absolute; top:3px; left:3px; width:8px; height:8px; }
   .hcell input{
-    width:100%; text-align:center; border:none; background:transparent;
+    width:auto; text-align:center; border:none; background:transparent;
     font-family:'Fredoka',sans-serif; font-weight:700; font-size:12.5px; color:var(--pink-deep);
   }
   .hcell input:focus{outline:none;}
   .cell-num,.cell-time{
-    display:flex; align-items:center; justify-content:center; gap:3px;
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
     background:var(--gray-light); border-radius:10px; padding:4px 2px;
   }
-  .color-dot.period-dot{width:11px; height:11px;}
-  .color-dot.break-dot{width:12px; height:12px;}
+  .color-dot.period-dot{ position:absolute; top:2px; left:2px; width:8px; height:8px; }
+  .color-dot.break-dot{width:9px; height:9px;}
   .cell-num input, .cell-time input{
-    width:100%; text-align:center; border:none; background:transparent;
+    width:auto; text-align:center; border:none; background:transparent;
     font-size:var(--period-font-size); font-weight:600; color:var(--ink-soft); font-family:'Fredoka',sans-serif;
   }
   .cell-time input{font-size:calc(var(--period-font-size) - 2px); padding:0;}
@@ -220,7 +229,7 @@
   }
   .period-cell .top-row{display:flex; align-items:flex-start; gap:5px;}
   .color-dot{
-    width:15px; height:15px; border-radius:50%; flex:none; cursor:pointer;
+    width:12px; height:12px; border-radius:50%; flex:none; cursor:pointer;
     border:2px solid rgba(255,255,255,0.9); box-shadow:0 0 0 1px rgba(0,0,0,0.08);
     margin-top:2px; display:inline-block;
   }
@@ -234,7 +243,7 @@
     flex:1; min-width:0; font-size:calc(var(--course-font-size) - 2px); opacity:0.85;
   }
   .period-cell textarea.course, .period-cell div.course{
-    font-size:var(--course-font-size); font-family:'Fredoka',sans-serif; padding-left:18px; margin-top:2px;
+    font-size:var(--course-font-size); font-family:'Fredoka',sans-serif; padding-left:2px; margin-top:2px;
   }
   .period-cell div.richtext[contenteditable]{
     min-height:15px; word-break:break-word; white-space:pre-wrap;
@@ -347,12 +356,12 @@
     background:var(--pink-light); border-radius:10px; padding:5px 8px;
   }
   .break-row input.blabel{
-    border:none; background:transparent; font-weight:700; font-size:12px; color:var(--pink-deep);
+    border:none; background:transparent; font-weight:700; font-size:var(--break-font-size); color:var(--pink-deep);
     text-align:center; font-family:'Fredoka',sans-serif; min-width:80px;
   }
   .break-row input.btime{
-    border:none; background:transparent; font-size:11px; color:var(--pink-deep); opacity:0.75;
-    text-align:center; width:100px;
+    border:none; background:transparent; font-size:calc(var(--break-font-size) - 1px); color:var(--pink-deep); opacity:0.75;
+    text-align:center; width:auto;
   }
   .break-row input:focus{outline:none;}
 
@@ -523,9 +532,11 @@
   </div>
 </div>
 <div class="multiselect-bar" id="multiselectBar">
-  <span id="multiselectCount">已選 0 格</span>
-  <div class="swatch-grid" id="multiselectSwatches"></div>
-  <button class="msclose" id="multiselectDone">完成</button>
+  <div class="ms-toprow">
+    <span id="multiselectCount">已選 0 格</span>
+    <button class="msclose" id="multiselectDone">完成</button>
+  </div>
+  <div class="ms-scroll" id="multiselectSwatches"></div>
 </div>
 
 </div>
@@ -537,7 +548,9 @@ const PALETTE = [
   '#A9A9B7','#BFCDBB','#D3C0B0','#AEB7A6','#C4B7C4','#B9CBC0','#CBB4B4',
   // 鵝黃／粉紅／藍／卡其 霧感色系（粉紅、藍色加量，綠色減量）
   '#D9A6A0','#E0C6D6','#D8B4C0','#E8B8C4','#E6D6A8','#EEDFB8','#C9A66B',
-  '#DDC9A3','#9FB8B0','#B8C9D9','#A8B8C4','#8FA8C4','#7B93B8','#6B85AA'
+  '#DDC9A3','#9FB8B0','#B8C9D9','#A8B8C4','#8FA8C4','#7B93B8','#6B85AA',
+  // 加量的紫色／粉色系
+  '#C9A8D6','#B896C9','#A88BC4','#E8A8C9','#F0B8D4','#D9A8C4'
 ];
 const TEXT_COLORS = [
   '#4A4258','#2E2E38','#5C6670','#5B7C99','#5B7FB5','#4F7089','#7A8F6E',
@@ -571,6 +584,8 @@ function loadFontSizes(){
     const saved = raw ? JSON.parse(raw) : {};
     if(saved.course) document.documentElement.style.setProperty('--course-font-size', saved.course + 'px');
     if(saved.period) document.documentElement.style.setProperty('--period-font-size', saved.period + 'px');
+    if(saved.note) document.documentElement.style.setProperty('--note-font-size', saved.note + 'px');
+    if(saved.brk) document.documentElement.style.setProperty('--break-font-size', saved.brk + 'px');
   }catch(e){}
 }
 function getFontSize(varName, fallback){
@@ -582,7 +597,9 @@ function saveFontSizes(){
   try{
     localStorage.setItem(FONT_SIZE_KEY, JSON.stringify({
       course: getFontSize('--course-font-size', 12.5),
-      period: getFontSize('--period-font-size', 11.5)
+      period: getFontSize('--period-font-size', 11.5),
+      note: getFontSize('--note-font-size', 13),
+      brk: getFontSize('--break-font-size', 12)
     }));
   }catch(e){}
 }
@@ -590,6 +607,18 @@ function adjustFontSize(varName, delta, min, max){
   const cur = getFontSize(varName, varName==='--course-font-size' ? 12.5 : 11.5);
   const next = Math.max(min, Math.min(max, cur + delta));
   document.documentElement.style.setProperty(varName, next + 'px');
+  if(varName === '--course-font-size'){
+    // keep the note/highlight fields below the table in sync with course text size
+    const noteCur = getFontSize('--note-font-size', 13);
+    const noteNext = Math.max(min + 0.5, Math.min(max + 0.5, noteCur + delta));
+    document.documentElement.style.setProperty('--note-font-size', noteNext + 'px');
+  }
+  if(varName === '--period-font-size'){
+    // keep break rows (午餐/午休/整潔/降旗) in sync with period/time text size
+    const breakCur = getFontSize('--break-font-size', 12);
+    const breakNext = Math.max(min + 0.5, Math.min(max + 0.5, breakCur + delta));
+    document.documentElement.style.setProperty('--break-font-size', breakNext + 'px');
+  }
   saveFontSizes();
   // re-run textarea autogrow so classname boxes fit the new font size
   document.querySelectorAll('textarea.autogrow').forEach(autoGrowEl);
@@ -910,10 +939,10 @@ function periodRowHTML(card, n){
   return `
   <div class="cell-num" style="${pBg?`background:${pBg};`:''} ${pText?`color:${pText};`:''}">
     <span class="color-dot period-dot" style="background:${pBg||'#DADAE2'}" data-role="periodstyle" data-card="${card.id}" data-period="${n}"></span>
-    <input type="text" value="${escapeAttr(num)}" style="font-weight:${pWeight}; ${pText?`color:${pText};`:''}" data-role="periodnum" data-card="${card.id}" data-period="${n}">
+    <input type="text" value="${escapeAttr(num)}" size="${Math.max(1,String(num||'').length)}" style="font-weight:${pWeight}; ${pText?`color:${pText};`:''}" data-role="periodnum" data-card="${card.id}" data-period="${n}">
   </div>
   <div class="cell-time" style="${pBg?`background:${pBg};`:''} ${pText?`color:${pText};`:''}">
-    <input type="text" value="${escapeAttr(time)}" style="${pText?`color:${pText};`:''}" data-role="periodtime" data-card="${card.id}" data-period="${n}">
+    <input type="text" value="${escapeAttr(time)}" size="${Math.max(4,String(time||'').length)}" style="${pText?`color:${pText};`:''}" data-role="periodtime" data-card="${card.id}" data-period="${n}">
   </div>
   ${daysHTML}`;
 }
@@ -930,10 +959,14 @@ function breakRowHTML(card, group, idx){
   </div>`;
 }
 
+let openDetailsKeys = new Set();
+function detailsOpenAttr(key){ return openDetailsKeys.has(key) ? ' open' : ''; }
+
 function noteSection(cardId, key, icon, label, placeholder){
   const val = getCard(cardId).notes[key] || '';
+  const dkey = `${cardId}-${key}`;
   return `
-  <details class="note">
+  <details class="note" data-detailskey="${dkey}"${detailsOpenAttr(dkey)}>
     <summary>${icon} ${label} <span class="arrow">▶</span></summary>
     <div class="note-body">
       <div class="richtext" contenteditable="true" data-placeholder="${placeholder}" data-role="notefield" data-card="${cardId}" data-key="${key}">${val}</div>
@@ -949,8 +982,9 @@ function dayNoteSection(cardId, key, icon, label, placeholder){
       <span class="day-note-label">${escapeHTML(day)}</span>
       <div class="richtext" contenteditable="true" data-placeholder="${placeholder}" data-role="daynotefield" data-card="${cardId}" data-key="${key}" data-day="${d}">${data[d]||''}</div>
     </div>`).join('');
+  const dkey = `${cardId}-${key}`;
   return `
-  <details class="note">
+  <details class="note" data-detailskey="${dkey}"${detailsOpenAttr(dkey)}>
     <summary>${icon} ${label} <span class="arrow">▶</span></summary>
     <div class="note-body">${rows}</div>
   </details>`;
@@ -965,8 +999,9 @@ function linksSection(card){
       <button class="rm" data-role="link-rm" data-card="${card.id}" data-idx="${i}">✕</button>
     </div>`).join('');
   const linkList = links.filter(l=>l.url).map(l=>`<div class="link-row">🔗 <a href="${escapeAttr(l.url)}" target="_blank" rel="noopener">${escapeHTML(l.title||l.url)}</a></div>`).join('');
+  const dkey = `${card.id}-links`;
   return `
-  <details class="note">
+  <details class="note" data-detailskey="${dkey}"${detailsOpenAttr(dkey)}>
     <summary>🔗 相關網頁 <span class="arrow">▶</span></summary>
     <div class="note-body">
       ${rows}
@@ -984,8 +1019,9 @@ function todosSection(card){
       <input type="text" placeholder="待辦事項" value="${escapeAttr(t.text)}" data-role="todo-text" data-card="${card.id}" data-idx="${i}">
       <button class="rm" data-role="todo-rm" data-card="${card.id}" data-idx="${i}">✕</button>
     </div>`).join('');
+  const dkey = `${card.id}-todos`;
   return `
-  <details class="note">
+  <details class="note" data-detailskey="${dkey}"${detailsOpenAttr(dkey)}>
     <summary>✅ 待完成事項 <span class="arrow">▶</span></summary>
     <div class="note-body">
       ${rows}
@@ -1002,8 +1038,8 @@ function cardHTML(card){
   const hStyleAttr = `${hBg?`background:${hBg};`:''} ${hText?`color:${hText};`:''}`;
   gridRows += `<div class="hcell" style="${hStyleAttr}">
     <span class="color-dot header-dot" style="background:${hBg||'#FF9EC0'}" data-role="headerstyle" data-card="${card.id}"></span>
-    <input type="text" value="${escapeAttr(card.colLabels.period)}" style="${hText?`color:${hText};`:''}" data-role="collabel" data-card="${card.id}" data-key="period"></div>`;
-  gridRows += `<div class="hcell" style="${hStyleAttr}"><input type="text" value="${escapeAttr(card.colLabels.time)}" style="${hText?`color:${hText};`:''}" data-role="collabel" data-card="${card.id}" data-key="time"></div>`;
+    <input type="text" value="${escapeAttr(card.colLabels.period)}" size="${Math.max(2,card.colLabels.period.length)}" style="${hText?`color:${hText};`:''}" data-role="collabel" data-card="${card.id}" data-key="period"></div>`;
+  gridRows += `<div class="hcell" style="${hStyleAttr}"><input type="text" value="${escapeAttr(card.colLabels.time)}" size="${Math.max(3,card.colLabels.time.length)}" style="${hText?`color:${hText};`:''}" data-role="collabel" data-card="${card.id}" data-key="time"></div>`;
   card.days.forEach((day,d)=>{
     gridRows += `<div class="hcell" style="${hStyleAttr}"><input type="text" value="${escapeAttr(day)}" style="${hText?`color:${hText};`:''}" data-role="daylabel" data-card="${card.id}" data-day="${d}"></div>`;
   });
@@ -1104,6 +1140,14 @@ function render(){
   wrap.innerHTML = sortedCardsForRender().map(cardHTML).join('');
   wrap.querySelectorAll('textarea.autogrow').forEach(autoGrowEl);
 }
+
+document.getElementById('cardsWrap').addEventListener('toggle', (e)=>{
+  const el = e.target;
+  if(el.tagName === 'DETAILS' && el.dataset.detailskey){
+    if(el.open) openDetailsKeys.add(el.dataset.detailskey);
+    else openDetailsKeys.delete(el.dataset.detailskey);
+  }
+}, true);
 
 document.getElementById('addBtn').addEventListener('click', addCard);
 document.getElementById('jumpBtn').addEventListener('click', ()=>{
@@ -1251,6 +1295,18 @@ document.getElementById('cardsWrap').addEventListener('change', (e)=>{
   if(role === 'todo-check'){ card.notes.todos[idx].done = t.checked; render(); saveState(); return; }
 });
 
+function positionPopover(pop, anchor){
+  const r = anchor.getBoundingClientRect();
+  const popW = 236;
+  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - popW - 8)) + 'px';
+  const popH = pop.offsetHeight;
+  let top = r.bottom + 6;
+  if(top + popH > window.innerHeight - 8){
+    top = Math.max(8, r.top - popH - 6);
+  }
+  pop.style.top = top + 'px';
+}
+
 function openCellStylePopover(anchor, cardId, periodN, dayIdx){
   document.querySelectorAll('.style-pop').forEach(p=>p.remove());
   const card = getCard(cardId);
@@ -1321,10 +1377,7 @@ function openCellStylePopover(anchor, cardId, periodN, dayIdx){
   pop.appendChild(classBoldRow);
 
   document.body.appendChild(pop);
-  const r = anchor.getBoundingClientRect();
-  const popW = 236;
-  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - popW - 8)) + 'px';
-  pop.style.top = (r.bottom + 6) + 'px';
+  positionPopover(pop, anchor);
 
   const closeOnce = (ev)=>{
     if(!pop.contains(ev.target) && ev.target !== anchor){
@@ -1403,10 +1456,7 @@ function openPeriodStylePopover(anchor, cardId, periodN){
   pop.appendChild(clearRow);
 
   document.body.appendChild(pop);
-  const r = anchor.getBoundingClientRect();
-  const popW = 236;
-  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - popW - 8)) + 'px';
-  pop.style.top = (r.bottom + 6) + 'px';
+  positionPopover(pop, anchor);
 
   const closeOnce = (ev)=>{
     if(!pop.contains(ev.target) && ev.target !== anchor){
@@ -1475,10 +1525,7 @@ function openHeaderStylePopover(anchor, cardId){
   pop.appendChild(clearRow);
 
   document.body.appendChild(pop);
-  const r = anchor.getBoundingClientRect();
-  const popW = 236;
-  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - popW - 8)) + 'px';
-  pop.style.top = (r.bottom + 6) + 'px';
+  positionPopover(pop, anchor);
 
   const closeOnce = (ev)=>{
     if(!pop.contains(ev.target) && ev.target !== anchor){
@@ -1547,10 +1594,7 @@ function openBreakStylePopover(anchor, cardId, group, idx){
   pop.appendChild(clearRow);
 
   document.body.appendChild(pop);
-  const r = anchor.getBoundingClientRect();
-  const popW = 236;
-  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - popW - 8)) + 'px';
-  pop.style.top = (r.bottom + 6) + 'px';
+  positionPopover(pop, anchor);
 
   const closeOnce = (ev)=>{
     if(!pop.contains(ev.target) && ev.target !== anchor){
