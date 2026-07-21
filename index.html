@@ -11,6 +11,7 @@
     --bg: #FFF7FA;
     --course-font-size: 12.5px;
     --period-font-size: 11.5px;
+    --note-font-size: 13px;
     --pink: #FF6FA0;
     --pink-deep: #E85589;
     --pink-light: #FFD6E8;
@@ -183,7 +184,7 @@
   .grid-scroll{ overflow-x:auto; margin-bottom:16px; border-radius:14px; }
   .week-grid{
     display:grid;
-    grid-template-columns: minmax(36px,auto) minmax(46px,auto) repeat(5, minmax(96px,1fr));
+    grid-template-columns: minmax(34px,48px) minmax(42px,64px) repeat(5, minmax(96px,1fr));
     gap:5px;
     min-width:660px;
   }
@@ -192,7 +193,9 @@
     border-radius:10px;
     padding:6px 4px;
     text-align:center;
+    display:flex; align-items:center; justify-content:center; gap:3px;
   }
+  .color-dot.header-dot{width:10px; height:10px;}
   .hcell input{
     width:100%; text-align:center; border:none; background:transparent;
     font-family:'Fredoka',sans-serif; font-weight:700; font-size:12.5px; color:var(--pink-deep);
@@ -233,11 +236,11 @@
   .period-cell textarea.course, .period-cell div.course{
     font-size:var(--course-font-size); font-family:'Fredoka',sans-serif; padding-left:18px; margin-top:2px;
   }
-  .period-cell div.course[contenteditable]{
+  .period-cell div.richtext[contenteditable]{
     min-height:15px; word-break:break-word; white-space:pre-wrap;
   }
-  .period-cell div.course[contenteditable]:focus{outline:none;}
-  .period-cell div.course[contenteditable]:empty:before{
+  .period-cell div.richtext[contenteditable]:focus{outline:none;}
+  .period-cell div.richtext[contenteditable]:empty:before{
     content: attr(data-placeholder); opacity:0.45;
   }
   .period-cell input:focus{outline:none;}
@@ -368,10 +371,19 @@
   .note-body{padding:2px 12px 12px;}
   .note-body textarea{
     width:100%; border:1.5px solid var(--gray); border-radius:10px;
-    padding:8px 10px; font-family:'Noto Sans TC',sans-serif; font-size:13px;
+    padding:8px 10px; font-family:'Noto Sans TC',sans-serif; font-size:var(--note-font-size);
     resize:vertical; min-height:52px; color:var(--ink);
   }
   .note-body textarea:focus{outline:none; border-color:var(--pink);}
+  .note-body .richtext[contenteditable]{
+    width:100%; border:1.5px solid var(--gray); border-radius:10px;
+    padding:8px 10px; font-family:'Noto Sans TC',sans-serif; font-size:var(--note-font-size);
+    min-height:52px; color:var(--ink); white-space:pre-wrap; word-break:break-word;
+    box-sizing:border-box;
+  }
+  .note-body .richtext[contenteditable]:focus{outline:none; border-color:var(--pink);}
+  .note-body .richtext[contenteditable]:empty:before{ content:attr(data-placeholder); opacity:0.45; }
+  .day-note-row .richtext[contenteditable]{ min-height:32px; }
 
   .day-note-row{ display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; }
   .day-note-label{
@@ -384,6 +396,13 @@
     resize:vertical; min-height:36px; color:var(--ink);
   }
   .day-note-row textarea:focus{outline:none; border-color:var(--pink);}
+  .day-note-row .richtext[contenteditable]{
+    flex:1; border:1.5px solid var(--gray); border-radius:10px;
+    padding:6px 9px; font-family:'Noto Sans TC',sans-serif; font-size:var(--note-font-size);
+    color:var(--ink); box-sizing:border-box; white-space:pre-wrap; word-break:break-word;
+  }
+  .day-note-row .richtext[contenteditable]:focus{outline:none; border-color:var(--pink);}
+  .day-note-row .richtext[contenteditable]:empty:before{ content:attr(data-placeholder); opacity:0.45; }
 
   .list-item{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
   .list-item input[type=text]{
@@ -592,6 +611,7 @@ function defaultCard(){
     weekLabel: '',
     weekStart: '',
     colLabels: { period:'節次', time:'Time' },
+    headerStyle: { color:'', textColor:'' },
     days: ['Monday','Tuesday','Wednesday','Thursday','Friday'],
     periodNums: {1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7'},
     periodTimes: {1:'8:40~9:20',2:'9:30~10:10',3:'10:30~11:10',4:'11:20~12:00',5:'13:10~13:50',6:'14:00~14:40',7:'14:50~15:30'},
@@ -673,7 +693,21 @@ function normalizeCard(c){
   c.notes.equipment = c.notes.equipment || '';
   c.notes.links = c.notes.links || [];
   c.notes.todos = c.notes.todos || [];
+
+  // migrate legacy plain-text note fields into rich-text HTML (so per-selection color/size works)
+  function migrateText(v){
+    if(v && v.indexOf('<') === -1) return escapeHTML(v).replace(/\n/g,'<br>');
+    return v || '';
+  }
+  c.notes.precautions = migrateText(c.notes.precautions);
+  c.notes.equipment = migrateText(c.notes.equipment);
+  ['highlights','absentStudents','missingHW'].forEach(key=>{
+    const obj = c.notes[key];
+    Object.keys(obj).forEach(d=>{ obj[d] = migrateText(obj[d]); });
+  });
+
   c.periodStyle = c.periodStyle || {};
+  c.headerStyle = c.headerStyle || {color:'', textColor:''};
   (c.breaksA||[]).forEach(b=>{
     if(b.color === undefined) b.color = '';
     if(b.textColor === undefined) b.textColor = '';
@@ -870,7 +904,7 @@ function periodRowHTML(card, n){
         <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
         <textarea class="classname autogrow" rows="1" placeholder="班級" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
       </div>
-      <div class="course" contenteditable="true" data-placeholder="課程" style="font-weight:${weight}" data-role="course" data-card="${card.id}" data-period="${n}" data-day="${d}">${cell.course||''}</div>
+      <div class="course richtext" contenteditable="true" data-placeholder="課程" style="font-weight:${weight}" data-role="course" data-card="${card.id}" data-period="${n}" data-day="${d}">${cell.course||''}</div>
     </div>`;
   }
   return `
@@ -902,7 +936,7 @@ function noteSection(cardId, key, icon, label, placeholder){
   <details class="note">
     <summary>${icon} ${label} <span class="arrow">▶</span></summary>
     <div class="note-body">
-      <textarea placeholder="${placeholder}" data-role="notefield" data-card="${cardId}" data-key="${key}">${escapeHTML(val)}</textarea>
+      <div class="richtext" contenteditable="true" data-placeholder="${placeholder}" data-role="notefield" data-card="${cardId}" data-key="${key}">${val}</div>
     </div>
   </details>`;
 }
@@ -913,7 +947,7 @@ function dayNoteSection(cardId, key, icon, label, placeholder){
   const rows = card.days.map((day,d)=>`
     <div class="day-note-row">
       <span class="day-note-label">${escapeHTML(day)}</span>
-      <textarea placeholder="${placeholder}" data-role="daynotefield" data-card="${cardId}" data-key="${key}" data-day="${d}">${escapeHTML(data[d]||'')}</textarea>
+      <div class="richtext" contenteditable="true" data-placeholder="${placeholder}" data-role="daynotefield" data-card="${cardId}" data-key="${key}" data-day="${d}">${data[d]||''}</div>
     </div>`).join('');
   return `
   <details class="note">
@@ -962,10 +996,16 @@ function todosSection(card){
 
 function cardHTML(card){
   let gridRows = '';
-  gridRows += `<div class="hcell"><input type="text" value="${escapeAttr(card.colLabels.period)}" data-role="collabel" data-card="${card.id}" data-key="period"></div>`;
-  gridRows += `<div class="hcell"><input type="text" value="${escapeAttr(card.colLabels.time)}" data-role="collabel" data-card="${card.id}" data-key="time"></div>`;
+  const hs = card.headerStyle || {};
+  const hBg = hs.color || '';
+  const hText = hs.textColor || '';
+  const hStyleAttr = `${hBg?`background:${hBg};`:''} ${hText?`color:${hText};`:''}`;
+  gridRows += `<div class="hcell" style="${hStyleAttr}">
+    <span class="color-dot header-dot" style="background:${hBg||'#FF9EC0'}" data-role="headerstyle" data-card="${card.id}"></span>
+    <input type="text" value="${escapeAttr(card.colLabels.period)}" style="${hText?`color:${hText};`:''}" data-role="collabel" data-card="${card.id}" data-key="period"></div>`;
+  gridRows += `<div class="hcell" style="${hStyleAttr}"><input type="text" value="${escapeAttr(card.colLabels.time)}" style="${hText?`color:${hText};`:''}" data-role="collabel" data-card="${card.id}" data-key="time"></div>`;
   card.days.forEach((day,d)=>{
-    gridRows += `<div class="hcell"><input type="text" value="${escapeAttr(day)}" data-role="daylabel" data-card="${card.id}" data-day="${d}"></div>`;
+    gridRows += `<div class="hcell" style="${hStyleAttr}"><input type="text" value="${escapeAttr(day)}" style="${hText?`color:${hText};`:''}" data-role="daylabel" data-card="${card.id}" data-day="${d}"></div>`;
   });
 
   [1,2,3,4].forEach(n=>{ gridRows += periodRowHTML(card, n); });
@@ -1133,6 +1173,21 @@ document.getElementById('cardsWrap').addEventListener('input', (e)=>{
       debouncedSave();
     }
   }
+  if(t.dataset && t.dataset.role === 'notefield'){
+    const card = getCard(t.dataset.card);
+    if(card){
+      card.notes[t.dataset.key] = t.innerHTML;
+      debouncedSave();
+    }
+  }
+  if(t.dataset && t.dataset.role === 'daynotefield'){
+    const card = getCard(t.dataset.card);
+    if(card){
+      if(!card.notes[t.dataset.key]) card.notes[t.dataset.key] = {};
+      card.notes[t.dataset.key][t.dataset.day] = t.innerHTML;
+      debouncedSave();
+    }
+  }
 });
 
 document.getElementById('cardsWrap').addEventListener('click', (e)=>{
@@ -1161,6 +1216,7 @@ document.getElementById('cardsWrap').addEventListener('click', (e)=>{
   }
   if(role === 'cellstyle'){ e.stopPropagation(); openCellStylePopover(t, cardId, t.dataset.period, t.dataset.day); return; }
   if(role === 'periodstyle'){ e.stopPropagation(); openPeriodStylePopover(t, cardId, t.dataset.period); return; }
+  if(role === 'headerstyle'){ e.stopPropagation(); openHeaderStylePopover(t, cardId); return; }
   if(role === 'breakstyle'){ e.stopPropagation(); openBreakStylePopover(t, cardId, t.dataset.group, t.dataset.idx); return; }
   if(role === 'link-add'){ card.notes.links.push({title:'', url:''}); render(); saveState(); return; }
   if(role === 'link-rm'){ card.notes.links.splice(Number(t.dataset.idx),1); render(); saveState(); return; }
@@ -1361,6 +1417,78 @@ function openPeriodStylePopover(anchor, cardId, periodN){
   setTimeout(()=>document.addEventListener('click', closeOnce), 10);
 }
 
+function openHeaderStylePopover(anchor, cardId){
+  document.querySelectorAll('.style-pop').forEach(p=>p.remove());
+  const card = getCard(cardId);
+  const hs = card.headerStyle;
+
+  const pop = document.createElement('div');
+  pop.className = 'style-pop show';
+
+  const bgLabel = document.createElement('div');
+  bgLabel.className = 'style-pop-label';
+  bgLabel.textContent = '背景顏色';
+  pop.appendChild(bgLabel);
+
+  const bgGrid = document.createElement('div');
+  bgGrid.className = 'swatch-grid';
+  PALETTE.forEach(c=>{
+    const sw = document.createElement('span');
+    sw.className = 'swatch' + (c===hs.color ? ' active' : '');
+    sw.style.background = c;
+    sw.addEventListener('click', ()=>{
+      hs.color = c;
+      render(); saveState();
+    });
+    bgGrid.appendChild(sw);
+  });
+  pop.appendChild(bgGrid);
+
+  const textLabel = document.createElement('div');
+  textLabel.className = 'style-pop-label';
+  textLabel.textContent = '文字顏色';
+  pop.appendChild(textLabel);
+
+  const textGrid = document.createElement('div');
+  textGrid.className = 'swatch-grid';
+  TEXT_COLORS.forEach(c=>{
+    const sw = document.createElement('span');
+    sw.className = 'swatch' + (c===hs.textColor ? ' active' : '');
+    sw.style.background = c;
+    if(c === '#FFFFFF') sw.style.border = '2px solid #ddd';
+    sw.addEventListener('click', ()=>{
+      hs.textColor = c;
+      render(); saveState();
+    });
+    textGrid.appendChild(sw);
+  });
+  pop.appendChild(textGrid);
+
+  const clearRow = document.createElement('button');
+  clearRow.className = 'pop-close';
+  clearRow.textContent = '清除自訂顏色';
+  clearRow.addEventListener('click', ()=>{
+    card.headerStyle = {color:'', textColor:''};
+    pop.remove();
+    render(); saveState();
+  });
+  pop.appendChild(clearRow);
+
+  document.body.appendChild(pop);
+  const r = anchor.getBoundingClientRect();
+  const popW = 236;
+  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - popW - 8)) + 'px';
+  pop.style.top = (r.bottom + 6) + 'px';
+
+  const closeOnce = (ev)=>{
+    if(!pop.contains(ev.target) && ev.target !== anchor){
+      pop.remove();
+      document.removeEventListener('click', closeOnce);
+    }
+  };
+  setTimeout(()=>document.addEventListener('click', closeOnce), 10);
+}
+
 function openBreakStylePopover(anchor, cardId, group, idx){
   document.querySelectorAll('.style-pop').forEach(p=>p.remove());
   const card = getCard(cardId);
@@ -1504,14 +1632,14 @@ document.addEventListener('selectionchange', ()=>{
     // don't hide immediately on collapse — the toolbar itself causes a brief collapse when tapped;
     // only hide if focus isn't on our toolbar or the course field
     const active = document.activeElement;
-    if(!active || (!active.closest || (!active.closest('#selToolbar') && !active.closest('.course[contenteditable]')))){
+    if(!active || (!active.closest || (!active.closest('#selToolbar') && !active.closest('.richtext[contenteditable]')))){
       hideSelToolbar();
     }
     return;
   }
   let node = sel.anchorNode;
   const el = node && (node.nodeType === 3 ? node.parentElement : node);
-  const courseEl = el && el.closest ? el.closest('.course[contenteditable]') : null;
+  const courseEl = el && el.closest ? el.closest('.richtext[contenteditable]') : null;
   if(!courseEl){ hideSelToolbar(); return; }
   activeCourseEl = courseEl;
   savedRange = sel.getRangeAt(0).cloneRange();
@@ -1520,7 +1648,7 @@ document.addEventListener('selectionchange', ()=>{
 });
 
 document.addEventListener('mousedown', (e)=>{
-  if(!e.target.closest('#selToolbar') && !e.target.closest('.course[contenteditable]')){
+  if(!e.target.closest('#selToolbar') && !e.target.closest('.richtext[contenteditable]')){
     hideSelToolbar();
   }
 });
