@@ -9,6 +9,8 @@
 <style>
   :root{
     --bg: #FFF7FA;
+    --course-font-size: 12.5px;
+    --period-font-size: 11.5px;
     --pink: #FF6FA0;
     --pink-deep: #E85589;
     --pink-light: #FFD6E8;
@@ -72,6 +74,37 @@
   .tool-btn.save:hover{ background:var(--pink-deep); }
   .tool-btn.restore{ background:var(--gray-light); color:var(--ink); }
   .tool-btn.restore:hover{ background:var(--gray); }
+  .tool-btn.multiselect{ background:var(--purple-light); color:#5A3F8A; }
+  .tool-btn.multiselect.active{ background:var(--purple); color:white; }
+  .font-ctrl-group{ display:flex; gap:4px; }
+  .tool-btn.fontbtn{
+    background:var(--gray-light); color:var(--ink); padding:7px 10px; font-size:12.5px;
+    min-width:32px;
+  }
+  .tool-btn.fontbtn:hover{ background:var(--gray); }
+  .font-ctrl-label{ font-size:11.5px; color:var(--ink-soft); font-weight:600; }
+
+  .period-cell.multi-selected{
+    outline:3px solid var(--pink-deep); outline-offset:-3px;
+  }
+  .period-cell.multiselectable{ cursor:pointer; }
+  .period-cell.multiselectable .course,
+  .period-cell.multiselectable .classname,
+  .period-cell.multiselectable .color-dot{ pointer-events:none; }
+
+  .multiselect-bar{
+    position:fixed; left:12px; right:12px; bottom:96px; z-index:85;
+    display:none; flex-direction:column; gap:8px; align-items:center;
+    background:white; border-radius:14px; padding:12px 14px;
+    box-shadow:var(--shadow); font-size:13px; color:var(--ink); text-align:center;
+    border:2px solid var(--purple-light);
+  }
+  .multiselect-bar.show{display:flex;}
+  .multiselect-bar .swatch-grid{justify-content:center;}
+  .multiselect-bar .msclose{
+    border:none; border-radius:10px; padding:6px 12px; font-size:12.5px;
+    background:var(--gray-light); color:var(--ink); cursor:pointer; font-family:'Fredoka',sans-serif;
+  }
   .save-status{ font-size:11.5px; color:var(--ink-soft); margin-left:auto; }
 
   .wrap{max-width:720px; margin:0 auto; padding:22px 14px 0;}
@@ -150,7 +183,7 @@
   .grid-scroll{ overflow-x:auto; margin-bottom:16px; border-radius:14px; }
   .week-grid{
     display:grid;
-    grid-template-columns: 42px 58px repeat(5, minmax(96px,1fr));
+    grid-template-columns: minmax(36px,auto) minmax(46px,auto) repeat(5, minmax(96px,1fr));
     gap:5px;
     min-width:660px;
   }
@@ -166,14 +199,16 @@
   }
   .hcell input:focus{outline:none;}
   .cell-num,.cell-time{
-    display:flex; align-items:center; justify-content:center;
+    display:flex; align-items:center; justify-content:center; gap:3px;
     background:var(--gray-light); border-radius:10px; padding:4px 2px;
   }
+  .color-dot.period-dot{width:11px; height:11px;}
+  .color-dot.break-dot{width:12px; height:12px;}
   .cell-num input, .cell-time input{
     width:100%; text-align:center; border:none; background:transparent;
-    font-size:11.5px; font-weight:600; color:var(--ink-soft); font-family:'Fredoka',sans-serif;
+    font-size:var(--period-font-size); font-weight:600; color:var(--ink-soft); font-family:'Fredoka',sans-serif;
   }
-  .cell-time input{font-size:9.5px; padding:0;}
+  .cell-time input{font-size:calc(var(--period-font-size) - 2px); padding:0;}
   .cell-num input:focus, .cell-time input:focus{outline:none;}
 
   .period-cell{
@@ -193,10 +228,10 @@
   }
   textarea.autogrow:focus{outline:none;}
   .period-cell textarea.classname{
-    flex:1; min-width:0; font-size:10.5px; opacity:0.85;
+    flex:1; min-width:0; font-size:calc(var(--course-font-size) - 2px); opacity:0.85;
   }
   .period-cell textarea.course, .period-cell div.course{
-    font-size:12.5px; font-family:'Fredoka',sans-serif; padding-left:18px; margin-top:2px;
+    font-size:var(--course-font-size); font-family:'Fredoka',sans-serif; padding-left:18px; margin-top:2px;
   }
   .period-cell div.course[contenteditable]{
     min-height:15px; word-break:break-word; white-space:pre-wrap;
@@ -437,6 +472,16 @@
 <div class="toolbar">
   <button class="tool-btn save" id="saveBtn">💾 儲存</button>
   <button class="tool-btn restore" id="restoreBtn">↩️ 還原上次儲存</button>
+  <span class="font-ctrl-group">
+    <button class="tool-btn fontbtn" id="courseFontDown">A-</button>
+    <button class="tool-btn fontbtn" id="courseFontUp">A+</button>
+  </span>
+  <span class="font-ctrl-label">節次/時間</span>
+  <span class="font-ctrl-group">
+    <button class="tool-btn fontbtn" id="periodFontDown">A-</button>
+    <button class="tool-btn fontbtn" id="periodFontUp">A+</button>
+  </span>
+  <button class="tool-btn multiselect" id="multiSelectBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
 </div>
 
@@ -457,6 +502,11 @@
     <button id="useCloudBtn">套用雲端版本</button>
     <button id="keepLocalBtn">保留本機版本</button>
   </div>
+</div>
+<div class="multiselect-bar" id="multiselectBar">
+  <span id="multiselectCount">已選 0 格</span>
+  <div class="swatch-grid" id="multiselectSwatches"></div>
+  <button class="msclose" id="multiselectDone">完成</button>
 </div>
 
 </div>
@@ -492,6 +542,39 @@ const CLOUD_DOC = db.collection('schedules').doc('main');
 let cards = [];
 let loaded = false;
 let expandedIds = new Set();
+let multiSelectMode = false;
+let multiSelected = new Set(); // keys like "cardId|period|day"
+
+const FONT_SIZE_KEY = 'schedule-font-sizes';
+function loadFontSizes(){
+  try{
+    const raw = localStorage.getItem(FONT_SIZE_KEY);
+    const saved = raw ? JSON.parse(raw) : {};
+    if(saved.course) document.documentElement.style.setProperty('--course-font-size', saved.course + 'px');
+    if(saved.period) document.documentElement.style.setProperty('--period-font-size', saved.period + 'px');
+  }catch(e){}
+}
+function getFontSize(varName, fallback){
+  const v = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+  const n = parseFloat(v);
+  return isNaN(n) ? fallback : n;
+}
+function saveFontSizes(){
+  try{
+    localStorage.setItem(FONT_SIZE_KEY, JSON.stringify({
+      course: getFontSize('--course-font-size', 12.5),
+      period: getFontSize('--period-font-size', 11.5)
+    }));
+  }catch(e){}
+}
+function adjustFontSize(varName, delta, min, max){
+  const cur = getFontSize(varName, varName==='--course-font-size' ? 12.5 : 11.5);
+  const next = Math.max(min, Math.min(max, cur + delta));
+  document.documentElement.style.setProperty(varName, next + 'px');
+  saveFontSizes();
+  // re-run textarea autogrow so classname boxes fit the new font size
+  document.querySelectorAll('textarea.autogrow').forEach(autoGrowEl);
+}
 
 function uid(){ return 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
@@ -512,6 +595,7 @@ function defaultCard(){
     days: ['Monday','Tuesday','Wednesday','Thursday','Friday'],
     periodNums: {1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7'},
     periodTimes: {1:'8:40~9:20',2:'9:30~10:10',3:'10:30~11:10',4:'11:20~12:00',5:'13:10~13:50',6:'14:00~14:40',7:'14:50~15:30'},
+    periodStyle: {},
     breaksA: [ {label:'午餐、潔牙', time:'12:00~12:30'}, {label:'午休時間', time:'12:30~13:05'} ],
     breaksB: [ {label:'整潔時間', time:'15:30~15:50'}, {label:'降旗放學', time:'15:50~16:00'} ],
     cells,
@@ -589,6 +673,15 @@ function normalizeCard(c){
   c.notes.equipment = c.notes.equipment || '';
   c.notes.links = c.notes.links || [];
   c.notes.todos = c.notes.todos || [];
+  c.periodStyle = c.periodStyle || {};
+  (c.breaksA||[]).forEach(b=>{
+    if(b.color === undefined) b.color = '';
+    if(b.textColor === undefined) b.textColor = '';
+  });
+  (c.breaksB||[]).forEach(b=>{
+    if(b.color === undefined) b.color = '';
+    if(b.textColor === undefined) b.textColor = '';
+  });
   if(c.cells){
     Object.keys(c.cells).forEach(n=>{
       Object.keys(c.cells[n]).forEach(d=>{
@@ -760,13 +853,19 @@ function escapeHTML(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function periodRowHTML(card, n){
   const time = card.periodTimes[n];
   const num = card.periodNums[n];
+  const pStyle = card.periodStyle[n] || {};
+  const pBg = pStyle.color || '';
+  const pText = pStyle.textColor || '';
+  const pWeight = pStyle.bold ? '700' : '600';
   let daysHTML = '';
   for(let d=0; d<5; d++){
     const cell = card.cells[n][d];
     const weight = cell.bold===false ? '400' : '700';
     const classNameWeight = cell.classNameBold ? '700' : '400';
+    const cellKey = `${card.id}|${n}|${d}`;
+    const isSelected = multiSelected.has(cellKey);
     daysHTML += `
-    <div class="period-cell" style="background:${cell.color}; color:${cell.textColor||'#4A4258'};">
+    <div class="period-cell ${multiSelectMode?'multiselectable':''} ${isSelected?'multi-selected':''}" data-cellkey="${cellKey}" style="background:${cell.color}; color:${cell.textColor||'#4A4258'};">
       <div class="top-row">
         <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
         <textarea class="classname autogrow" rows="1" placeholder="班級" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
@@ -775,17 +874,25 @@ function periodRowHTML(card, n){
     </div>`;
   }
   return `
-  <div class="cell-num"><input type="text" value="${escapeAttr(num)}" data-role="periodnum" data-card="${card.id}" data-period="${n}"></div>
-  <div class="cell-time"><input type="text" value="${escapeAttr(time)}" data-role="periodtime" data-card="${card.id}" data-period="${n}"></div>
+  <div class="cell-num" style="${pBg?`background:${pBg};`:''} ${pText?`color:${pText};`:''}">
+    <span class="color-dot period-dot" style="background:${pBg||'#DADAE2'}" data-role="periodstyle" data-card="${card.id}" data-period="${n}"></span>
+    <input type="text" value="${escapeAttr(num)}" style="font-weight:${pWeight}; ${pText?`color:${pText};`:''}" data-role="periodnum" data-card="${card.id}" data-period="${n}">
+  </div>
+  <div class="cell-time" style="${pBg?`background:${pBg};`:''} ${pText?`color:${pText};`:''}">
+    <input type="text" value="${escapeAttr(time)}" style="${pText?`color:${pText};`:''}" data-role="periodtime" data-card="${card.id}" data-period="${n}">
+  </div>
   ${daysHTML}`;
 }
 
 function breakRowHTML(card, group, idx){
   const b = card[group][idx];
+  const bg = b.color || '';
+  const tc = b.textColor || '';
   return `
-  <div class="break-row">
-    <input class="blabel" type="text" value="${escapeAttr(b.label)}" data-role="breaklabel" data-card="${card.id}" data-group="${group}" data-idx="${idx}">
-    <input class="btime" type="text" value="${escapeAttr(b.time)}" data-role="breaktime" data-card="${card.id}" data-group="${group}" data-idx="${idx}">
+  <div class="break-row" style="${bg?`background:${bg};`:''}">
+    <span class="color-dot break-dot" style="background:${bg||'#FFC6DD'}" data-role="breakstyle" data-card="${card.id}" data-group="${group}" data-idx="${idx}"></span>
+    <input class="blabel" type="text" value="${escapeAttr(b.label)}" style="${tc?`color:${tc};`:''}" data-role="breaklabel" data-card="${card.id}" data-group="${group}" data-idx="${idx}">
+    <input class="btime" type="text" value="${escapeAttr(b.time)}" style="${tc?`color:${tc};`:''}" data-role="breaktime" data-card="${card.id}" data-group="${group}" data-idx="${idx}">
   </div>`;
 }
 
@@ -967,6 +1074,53 @@ document.getElementById('jumpBtn').addEventListener('click', ()=>{
   setTimeout(()=>scrollToCard(id), 60);
 });
 
+loadFontSizes();
+document.getElementById('courseFontDown').addEventListener('click', ()=>adjustFontSize('--course-font-size', -1, 9, 20));
+document.getElementById('courseFontUp').addEventListener('click', ()=>adjustFontSize('--course-font-size', 1, 9, 20));
+document.getElementById('periodFontDown').addEventListener('click', ()=>adjustFontSize('--period-font-size', -1, 8, 18));
+document.getElementById('periodFontUp').addEventListener('click', ()=>adjustFontSize('--period-font-size', 1, 8, 18));
+
+/* ---------- Multi-select cell coloring ---------- */
+const multiSelectBtn = document.getElementById('multiSelectBtn');
+const multiselectBar = document.getElementById('multiselectBar');
+const multiselectCount = document.getElementById('multiselectCount');
+const multiselectSwatchesEl = document.getElementById('multiselectSwatches');
+
+function buildMultiselectSwatches(){
+  multiselectSwatchesEl.innerHTML = '';
+  PALETTE.forEach(c=>{
+    const sw = document.createElement('span');
+    sw.className = 'swatch';
+    sw.style.background = c;
+    sw.addEventListener('click', ()=>{
+      if(multiSelected.size === 0) return;
+      multiSelected.forEach(key=>{
+        const [cardId, n, d] = key.split('|');
+        const card = getCard(cardId);
+        if(card && card.cells[n] && card.cells[n][d]) card.cells[n][d].color = c;
+      });
+      render(); saveState();
+      showToast(`🎨 已套用到 ${multiSelected.size} 格`);
+    });
+    multiselectSwatchesEl.appendChild(sw);
+  });
+}
+buildMultiselectSwatches();
+
+function setMultiSelectMode(on){
+  multiSelectMode = on;
+  multiSelectBtn.classList.toggle('active', on);
+  multiselectBar.classList.toggle('show', on);
+  if(!on){ multiSelected.clear(); }
+  updateMultiselectCount();
+  render();
+}
+function updateMultiselectCount(){
+  multiselectCount.textContent = `已選 ${multiSelected.size} 格`;
+}
+multiSelectBtn.addEventListener('click', ()=> setMultiSelectMode(!multiSelectMode));
+document.getElementById('multiselectDone').addEventListener('click', ()=> setMultiSelectMode(false));
+
 document.getElementById('cardsWrap').addEventListener('input', (e)=>{
   const t = e.target;
   if(t.classList && t.classList.contains('autogrow')){
@@ -982,6 +1136,18 @@ document.getElementById('cardsWrap').addEventListener('input', (e)=>{
 });
 
 document.getElementById('cardsWrap').addEventListener('click', (e)=>{
+  if(multiSelectMode){
+    const cellEl = e.target.closest('.period-cell');
+    if(cellEl){
+      e.preventDefault();
+      e.stopPropagation();
+      const key = cellEl.dataset.cellkey;
+      if(multiSelected.has(key)) multiSelected.delete(key); else multiSelected.add(key);
+      updateMultiselectCount();
+      render();
+      return;
+    }
+  }
   const t = e.target;
   const role = t.dataset.role;
   if(!role) return;
@@ -994,6 +1160,8 @@ document.getElementById('cardsWrap').addEventListener('click', (e)=>{
     return;
   }
   if(role === 'cellstyle'){ e.stopPropagation(); openCellStylePopover(t, cardId, t.dataset.period, t.dataset.day); return; }
+  if(role === 'periodstyle'){ e.stopPropagation(); openPeriodStylePopover(t, cardId, t.dataset.period); return; }
+  if(role === 'breakstyle'){ e.stopPropagation(); openBreakStylePopover(t, cardId, t.dataset.group, t.dataset.idx); return; }
   if(role === 'link-add'){ card.notes.links.push({title:'', url:''}); render(); saveState(); return; }
   if(role === 'link-rm'){ card.notes.links.splice(Number(t.dataset.idx),1); render(); saveState(); return; }
   if(role === 'todo-add'){ card.notes.todos.push({text:'', done:false}); render(); saveState(); return; }
@@ -1095,6 +1263,160 @@ function openCellStylePopover(anchor, cardId, periodN, dayIdx){
     render(); saveState();
   });
   pop.appendChild(classBoldRow);
+
+  document.body.appendChild(pop);
+  const r = anchor.getBoundingClientRect();
+  const popW = 236;
+  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - popW - 8)) + 'px';
+  pop.style.top = (r.bottom + 6) + 'px';
+
+  const closeOnce = (ev)=>{
+    if(!pop.contains(ev.target) && ev.target !== anchor){
+      pop.remove();
+      document.removeEventListener('click', closeOnce);
+    }
+  };
+  setTimeout(()=>document.addEventListener('click', closeOnce), 10);
+}
+
+function openPeriodStylePopover(anchor, cardId, periodN){
+  document.querySelectorAll('.style-pop').forEach(p=>p.remove());
+  const card = getCard(cardId);
+  if(!card.periodStyle[periodN]) card.periodStyle[periodN] = {color:'', textColor:'', bold:false};
+  const st = card.periodStyle[periodN];
+
+  const pop = document.createElement('div');
+  pop.className = 'style-pop show';
+
+  const bgLabel = document.createElement('div');
+  bgLabel.className = 'style-pop-label';
+  bgLabel.textContent = '背景顏色';
+  pop.appendChild(bgLabel);
+
+  const bgGrid = document.createElement('div');
+  bgGrid.className = 'swatch-grid';
+  PALETTE.forEach(c=>{
+    const sw = document.createElement('span');
+    sw.className = 'swatch' + (c===st.color ? ' active' : '');
+    sw.style.background = c;
+    sw.addEventListener('click', ()=>{
+      st.color = c;
+      render(); saveState();
+    });
+    bgGrid.appendChild(sw);
+  });
+  pop.appendChild(bgGrid);
+
+  const textLabel = document.createElement('div');
+  textLabel.className = 'style-pop-label';
+  textLabel.textContent = '文字顏色';
+  pop.appendChild(textLabel);
+
+  const textGrid = document.createElement('div');
+  textGrid.className = 'swatch-grid';
+  TEXT_COLORS.forEach(c=>{
+    const sw = document.createElement('span');
+    sw.className = 'swatch' + (c===st.textColor ? ' active' : '');
+    sw.style.background = c;
+    if(c === '#FFFFFF') sw.style.border = '2px solid #ddd';
+    sw.addEventListener('click', ()=>{
+      st.textColor = c;
+      render(); saveState();
+    });
+    textGrid.appendChild(sw);
+  });
+  pop.appendChild(textGrid);
+
+  const boldRow = document.createElement('label');
+  boldRow.className = 'bold-toggle-row';
+  boldRow.innerHTML = `<input type="checkbox" ${st.bold ? 'checked' : ''}><span>粗體</span>`;
+  boldRow.querySelector('input').addEventListener('change', (e)=>{
+    st.bold = e.target.checked;
+    render(); saveState();
+  });
+  pop.appendChild(boldRow);
+
+  const clearRow = document.createElement('button');
+  clearRow.className = 'pop-close';
+  clearRow.textContent = '清除自訂顏色';
+  clearRow.addEventListener('click', ()=>{
+    card.periodStyle[periodN] = {color:'', textColor:'', bold:false};
+    pop.remove();
+    render(); saveState();
+  });
+  pop.appendChild(clearRow);
+
+  document.body.appendChild(pop);
+  const r = anchor.getBoundingClientRect();
+  const popW = 236;
+  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - popW - 8)) + 'px';
+  pop.style.top = (r.bottom + 6) + 'px';
+
+  const closeOnce = (ev)=>{
+    if(!pop.contains(ev.target) && ev.target !== anchor){
+      pop.remove();
+      document.removeEventListener('click', closeOnce);
+    }
+  };
+  setTimeout(()=>document.addEventListener('click', closeOnce), 10);
+}
+
+function openBreakStylePopover(anchor, cardId, group, idx){
+  document.querySelectorAll('.style-pop').forEach(p=>p.remove());
+  const card = getCard(cardId);
+  const b = card[group][idx];
+
+  const pop = document.createElement('div');
+  pop.className = 'style-pop show';
+
+  const bgLabel = document.createElement('div');
+  bgLabel.className = 'style-pop-label';
+  bgLabel.textContent = '背景顏色';
+  pop.appendChild(bgLabel);
+
+  const bgGrid = document.createElement('div');
+  bgGrid.className = 'swatch-grid';
+  PALETTE.forEach(c=>{
+    const sw = document.createElement('span');
+    sw.className = 'swatch' + (c===b.color ? ' active' : '');
+    sw.style.background = c;
+    sw.addEventListener('click', ()=>{
+      b.color = c;
+      render(); saveState();
+    });
+    bgGrid.appendChild(sw);
+  });
+  pop.appendChild(bgGrid);
+
+  const textLabel = document.createElement('div');
+  textLabel.className = 'style-pop-label';
+  textLabel.textContent = '文字顏色';
+  pop.appendChild(textLabel);
+
+  const textGrid = document.createElement('div');
+  textGrid.className = 'swatch-grid';
+  TEXT_COLORS.forEach(c=>{
+    const sw = document.createElement('span');
+    sw.className = 'swatch' + (c===b.textColor ? ' active' : '');
+    sw.style.background = c;
+    if(c === '#FFFFFF') sw.style.border = '2px solid #ddd';
+    sw.addEventListener('click', ()=>{
+      b.textColor = c;
+      render(); saveState();
+    });
+    textGrid.appendChild(sw);
+  });
+  pop.appendChild(textGrid);
+
+  const clearRow = document.createElement('button');
+  clearRow.className = 'pop-close';
+  clearRow.textContent = '清除自訂顏色';
+  clearRow.addEventListener('click', ()=>{
+    b.color = ''; b.textColor = '';
+    pop.remove();
+    render(); saveState();
+  });
+  pop.appendChild(clearRow);
 
   document.body.appendChild(pop);
   const r = anchor.getBoundingClientRect();
