@@ -24,15 +24,12 @@
     --orange-light: #FFEBD4;
     --gray: #DADAE2;
     --gray-light: #F1F1F5;
-    --fs: 1;
-    --rowfs: 1;
     --ink: #4A4258;
     --ink-soft: #837B92;
     --white: #FFFFFF;
     --shadow: 0 8px 24px rgba(180, 130, 160, 0.18);
   }
   *{box-sizing:border-box;}
-  input[type=text]{ -webkit-appearance:none; appearance:none; line-height:1.35; }
   body{
     margin:0;
     font-family:'Noto Sans TC', sans-serif;
@@ -56,9 +53,9 @@
     text-align:center;
     overflow:hidden;
   }
-  .topbar .deco{position:absolute; font-size:calc(26px * var(--fs)); opacity:0.55; user-select:none;}
-  .topbar h1{margin:0; font-size:calc(24px * var(--fs)); font-weight:700; letter-spacing:1px; text-shadow:0 2px 6px rgba(0,0,0,0.12);}
-  .topbar p{margin:6px 0 0; font-size:calc(12.5px * var(--fs)); opacity:0.92; font-weight:500;}
+  .topbar .deco{position:absolute; font-size:26px; opacity:0.55; user-select:none;}
+  .topbar h1{margin:0; font-size:24px; font-weight:700; letter-spacing:1px; text-shadow:0 2px 6px rgba(0,0,0,0.12);}
+  .topbar p{margin:6px 0 0; font-size:12.5px; opacity:0.92; font-weight:500;}
 
   .toolbar{
     position:sticky; top:0; z-index:49;
@@ -68,30 +65,18 @@
     border-bottom:1px solid var(--gray-light);
   }
   .tool-btn{
-    font-family:'Fredoka',sans-serif; font-weight:600; font-size:calc(13px * var(--fs));
+    font-family:'Fredoka',sans-serif; font-weight:600; font-size:13px;
     border:none; border-radius:999px; padding:8px 14px; cursor:pointer;
   }
   .tool-btn.save{ background:var(--pink); color:white; }
   .tool-btn.save:hover{ background:var(--pink-deep); }
   .tool-btn.restore{ background:var(--gray-light); color:var(--ink); }
   .tool-btn.restore:hover{ background:var(--gray); }
-  .tool-btn.batch{ background:var(--purple-light); color:#5B3F7A; }
-  .tool-btn.batch.active{ background:var(--purple); color:white; }
-  .tool-btn.batch:hover{ filter:brightness(0.97); }
-  .fs-label{ font-size:10.5px; font-weight:600; color:var(--ink-soft); font-family:'Fredoka',sans-serif; }
-  .save-status{ font-size:calc(11.5px * var(--fs)); color:var(--ink-soft); margin-left:auto; }
-  .fontsize-ctrl{ display:flex; gap:4px; }
-  .fs-btn{
-    font-family:'Fredoka',sans-serif; font-weight:700; font-size:13px;
-    border:none; border-radius:999px; padding:8px 12px; cursor:pointer;
-    background:var(--gray-light); color:var(--ink);
-  }
-  .fs-btn:hover{ background:var(--gray); }
-  .fs-btn:active{ transform:translateY(1px); }
+  .save-status{ font-size:11.5px; color:var(--ink-soft); margin-left:auto; }
 
   .wrap{max-width:720px; margin:0 auto; padding:22px 14px 0;}
   .empty-state{text-align:center; padding:60px 20px; color:var(--ink-soft);}
-  .empty-state .big{font-size:calc(44px * var(--fs)); margin-bottom:10px;}
+  .empty-state .big{font-size:44px; margin-bottom:10px;}
 
   .day-card{
     position:relative;
@@ -116,12 +101,12 @@
     margin-bottom:12px; padding-top:6px;
   }
   .toggle-arrow{
-    flex:none; font-size:calc(14px * var(--fs)); color:var(--pink-deep); cursor:pointer;
+    flex:none; font-size:14px; color:var(--pink-deep); cursor:pointer;
     transition:transform .2s ease; padding:4px 3px; user-select:none; line-height:1;
   }
   .day-card.collapsed .toggle-arrow{ transform:rotate(-90deg); }
   .week-badge{
-    flex:none; font-family:'Fredoka',sans-serif; font-weight:600; font-size:calc(12px * var(--fs));
+    flex:none; font-family:'Fredoka',sans-serif; font-weight:600; font-size:12px;
     color:#1c6fa8; background:var(--blue-light); border-radius:999px; padding:6px 11px;
     cursor:pointer; white-space:nowrap;
   }
@@ -131,21 +116,21 @@
   .jump-fab{
     position:fixed; left:20px; bottom:26px; z-index:60;
     background:var(--white); color:var(--pink-deep); border:2px solid var(--pink-light);
-    border-radius:999px; padding:13px 18px; font-size:calc(13px * var(--fs)); font-weight:700;
+    border-radius:999px; padding:13px 18px; font-size:13px; font-weight:700;
     font-family:'Fredoka',sans-serif; box-shadow:var(--shadow); cursor:pointer;
     display:flex; align-items:center; gap:5px;
   }
   .jump-fab:hover{transform:translateY(-2px);}
   .classroom-title{
     font-family:'Fredoka', sans-serif;
-    font-size:calc(19px * var(--fs)); font-weight:700; color:var(--pink-deep);
+    font-size:19px; font-weight:700; color:var(--pink-deep);
     border:none; border-bottom:2px dashed var(--pink-light);
     background:transparent; padding:6px 2px; flex:1; min-width:140px;
   }
   .classroom-title:focus{outline:none; border-bottom-color:var(--pink);}
   .del-btn{
     background:none; border:none; cursor:pointer;
-    font-size:calc(18px * var(--fs)); color:var(--ink-soft); padding:6px; border-radius:8px;
+    font-size:18px; color:var(--ink-soft); padding:6px; border-radius:8px;
   }
   .del-btn:hover{background:var(--gray-light); color:#d64545;}
 
@@ -153,57 +138,43 @@
     display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:14px;
   }
   .week-label-input{
-    font-family:'Fredoka', sans-serif; font-weight:600; font-size:calc(13.5px * var(--fs));
+    font-family:'Fredoka', sans-serif; font-weight:600; font-size:13.5px;
     border:2px solid var(--blue-light); background:var(--blue-light); color:#1c6fa8;
     border-radius:10px; padding:6px 10px; flex:1; min-width:120px;
   }
   .week-date-input{
-    border:2px solid var(--gray); border-radius:10px; padding:5px 8px; font-size:calc(12.5px * var(--fs)); color:var(--ink-soft);
+    border:2px solid var(--gray); border-radius:10px; padding:5px 8px; font-size:12.5px; color:var(--ink-soft);
   }
 
   /* ---------- Weekly Grid ---------- */
   .grid-scroll{ overflow-x:auto; margin-bottom:16px; border-radius:14px; }
   .week-grid{
     display:grid;
-    grid-template-columns: calc(46px * var(--rowfs)) calc(92px * var(--rowfs)) repeat(5, minmax(96px,1fr));
+    grid-template-columns: 42px 58px repeat(5, minmax(96px,1fr));
     gap:5px;
-    min-width:700px;
+    min-width:660px;
   }
   .hcell{
     background:var(--pink-light);
     border-radius:10px;
     padding:6px 4px;
     text-align:center;
-    position:relative;
-  }
-  .hcell .h-dot{
-    position:absolute; top:3px; right:3px;
-    width:11px; height:11px; border-radius:50%; cursor:pointer;
-    border:1.5px solid rgba(255,255,255,0.9); box-shadow:0 0 0 1px rgba(0,0,0,0.1);
   }
   .hcell input{
     width:100%; text-align:center; border:none; background:transparent;
-    font-family:'Fredoka',sans-serif; font-weight:700; font-size:calc(12.5px * var(--fs)); color:var(--pink-deep);
+    font-family:'Fredoka',sans-serif; font-weight:700; font-size:12.5px; color:var(--pink-deep);
   }
-  .hcell.rowlabel input{ font-size:calc(12.5px * var(--rowfs)); }
   .hcell input:focus{outline:none;}
   .cell-num,.cell-time{
     display:flex; align-items:center; justify-content:center;
     background:var(--gray-light); border-radius:10px; padding:4px 2px;
-    position:relative;
   }
-  .cell-num .h-dot, .cell-time .h-dot{
-    position:absolute; top:2px; right:2px;
-    width:9px; height:9px; border-radius:50%; cursor:pointer;
-    border:1.5px solid rgba(255,255,255,0.9); box-shadow:0 0 0 1px rgba(0,0,0,0.1);
-  }
-  .cell-num textarea.rowfield, .cell-time textarea.rowfield{
+  .cell-num input, .cell-time input{
     width:100%; text-align:center; border:none; background:transparent;
-    font-size:calc(11.5px * var(--rowfs)); font-weight:600; color:var(--ink-soft); font-family:'Fredoka',sans-serif;
-    resize:none; overflow:hidden; padding:0; margin:0; white-space:normal; word-break:normal; overflow-wrap:normal;
+    font-size:11.5px; font-weight:600; color:var(--ink-soft); font-family:'Fredoka',sans-serif;
   }
-  .cell-time textarea.rowfield{font-size:calc(12px * var(--rowfs));}
-  .cell-num textarea.rowfield:focus, .cell-time textarea.rowfield:focus{outline:none;}
+  .cell-time input{font-size:9.5px; padding:0;}
+  .cell-num input:focus, .cell-time input:focus{outline:none;}
 
   .period-cell{
     border-radius:12px; padding:6px 7px;
@@ -222,10 +193,10 @@
   }
   textarea.autogrow:focus{outline:none;}
   .period-cell textarea.classname{
-    flex:1; min-width:0; font-size:calc(10.5px * var(--fs)); opacity:0.85;
+    flex:1; min-width:0; font-size:10.5px; opacity:0.85;
   }
   .period-cell textarea.course, .period-cell div.course{
-    font-size:calc(12.5px * var(--fs)); font-family:'Fredoka',sans-serif; padding-left:18px; margin-top:2px;
+    font-size:12.5px; font-family:'Fredoka',sans-serif; padding-left:18px; margin-top:2px;
   }
   .period-cell div.course[contenteditable]{
     min-height:15px; word-break:break-word; white-space:pre-wrap;
@@ -251,18 +222,39 @@
   .sel-toolbar .csep{ width:1px; align-self:stretch; background:var(--gray-light); }
   .sel-toolbar .selbold-btn{
     border:none; border-radius:8px; background:var(--gray-light); color:var(--ink);
-    font-weight:700; font-family:'Fredoka',sans-serif; font-size:calc(12.5px * var(--fs));
+    font-weight:700; font-family:'Fredoka',sans-serif; font-size:12.5px;
     padding:5px 9px; cursor:pointer; flex:none;
-  }
-  .sel-toolbar .selfont-btn{
-    border:none; border-radius:8px; background:var(--gray-light); color:var(--ink);
-    font-weight:700; font-family:'Fredoka',sans-serif; font-size:calc(11px * var(--fs));
-    padding:5px 8px; cursor:pointer; flex:none;
   }
   .sel-toolbar .selclear-btn{
     border:none; border-radius:8px; background:none; color:var(--ink-soft);
-    font-size:calc(15px * var(--fs)); cursor:pointer; padding:3px 5px; flex:none;
+    font-size:15px; cursor:pointer; padding:3px 5px; flex:none;
   }
+
+  /* ---------- Login overlay ---------- */
+  .login-overlay{
+    position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(circle at 20px 20px, rgba(255,111,160,0.08) 2px, transparent 2px), var(--bg);
+    padding:20px;
+  }
+  .login-card{
+    background:white; border-radius:22px; box-shadow:var(--shadow);
+    padding:32px 26px; width:100%; max-width:340px; text-align:center;
+  }
+  .login-card .big-emoji{font-size:40px; margin-bottom:6px;}
+  .login-card h2{margin:0 0 4px; font-family:'Fredoka',sans-serif; color:var(--pink-deep);}
+  .login-card p.sub{margin:0 0 20px; color:var(--ink-soft); font-size:13px;}
+  .login-card input{
+    width:100%; padding:11px 14px; border-radius:12px; border:1.5px solid var(--gray);
+    font-size:15px; margin-bottom:12px; font-family:inherit;
+  }
+  .login-card input:focus{outline:none; border-color:var(--pink);}
+  .login-card button.login-btn{
+    width:100%; padding:12px; border:none; border-radius:12px; background:var(--pink);
+    color:white; font-weight:700; font-family:'Fredoka',sans-serif; font-size:15px; cursor:pointer;
+  }
+  .login-card button.login-btn:disabled{opacity:0.6;}
+  .login-card .login-error{color:#C0405A; font-size:12.5px; margin-top:10px; min-height:16px;}
+  .app-hidden{display:none !important;}
 
   /* ---------- Cell style popover ---------- */
   .style-pop{
@@ -271,7 +263,7 @@
     z-index:90; width:236px; max-height:70vh; overflow-y:auto;
   }
   .style-pop.show{display:flex;}
-  .style-pop-label{ font-size:calc(11.5px * var(--fs)); font-weight:700; color:var(--ink-soft); margin-top:2px; }
+  .style-pop-label{ font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-top:2px; }
   .swatch-grid{ display:flex; flex-wrap:wrap; gap:6px; }
   .swatch{
     width:22px; height:22px; border-radius:50%; cursor:pointer;
@@ -279,7 +271,7 @@
   }
   .swatch.active{ border-color:var(--pink); box-shadow:0 0 0 2px var(--pink); }
   .bold-toggle-row{
-    display:flex; align-items:center; gap:8px; font-size:calc(13px * var(--fs)); font-weight:600;
+    display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600;
     color:var(--ink); margin-top:4px; cursor:pointer;
   }
   .bold-toggle-row input{ width:16px; height:16px; accent-color:var(--pink); }
@@ -291,7 +283,7 @@
   }
   .color-pop.show{display:flex;}
   .color-pop .pop-label{
-    font-size:calc(11px * var(--fs)); font-weight:700; color:var(--ink-soft); margin:4px 0 2px;
+    font-size:11px; font-weight:700; color:var(--ink-soft); margin:4px 0 2px;
     font-family:'Fredoka',sans-serif;
   }
   .swatch-grid{ display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; }
@@ -303,12 +295,12 @@
   .bold-btn{
     margin-top:6px; width:100%; padding:7px; border:none; border-radius:8px;
     background:var(--gray-light); font-weight:700; font-family:'Fredoka',sans-serif;
-    cursor:pointer; font-size:calc(12.5px * var(--fs)); color:var(--ink);
+    cursor:pointer; font-size:12.5px; color:var(--ink);
   }
   .bold-btn.active{ background:var(--pink); color:white; }
   .pop-close{
     margin-top:6px; width:100%; padding:6px; border:none; border-radius:8px;
-    background:transparent; color:var(--ink-soft); font-size:calc(11.5px * var(--fs)); cursor:pointer;
+    background:transparent; color:var(--ink-soft); font-size:11.5px; cursor:pointer;
   }
 
   .break-row{
@@ -316,16 +308,12 @@
     display:flex; align-items:center; justify-content:center; gap:10px;
     background:var(--pink-light); border-radius:10px; padding:5px 8px;
   }
-  .break-row .b-dot{
-    width:13px; height:13px; border-radius:50%; cursor:pointer; flex:none;
-    border:2px solid rgba(255,255,255,0.9); box-shadow:0 0 0 1px rgba(0,0,0,0.1);
-  }
   .break-row input.blabel{
-    border:none; background:transparent; font-weight:700; font-size:calc(12px * var(--fs)); color:var(--pink-deep);
+    border:none; background:transparent; font-weight:700; font-size:12px; color:var(--pink-deep);
     text-align:center; font-family:'Fredoka',sans-serif; min-width:80px;
   }
   .break-row input.btime{
-    border:none; background:transparent; font-size:calc(11px * var(--fs)); color:var(--pink-deep); opacity:0.75;
+    border:none; background:transparent; font-size:11px; color:var(--pink-deep); opacity:0.75;
     text-align:center; width:100px;
   }
   .break-row input:focus{outline:none;}
@@ -336,16 +324,16 @@
   details.note summary{
     list-style:none; cursor:pointer; padding:10px 12px;
     display:flex; align-items:center; gap:8px;
-    font-weight:700; font-size:calc(13px * var(--fs)); color:var(--ink);
+    font-weight:700; font-size:13px; color:var(--ink);
     -webkit-tap-highlight-color: transparent;
   }
   details.note summary::-webkit-details-marker{display:none;}
-  details.note summary .arrow{margin-left:auto; transition:transform .2s; font-size:calc(11px * var(--fs)); color:var(--ink-soft);}
+  details.note summary .arrow{margin-left:auto; transition:transform .2s; font-size:11px; color:var(--ink-soft);}
   details.note[open] summary .arrow{transform:rotate(90deg);}
   .note-body{padding:2px 12px 12px;}
   .note-body textarea{
     width:100%; border:1.5px solid var(--gray); border-radius:10px;
-    padding:8px 10px; font-family:'Noto Sans TC',sans-serif; font-size:calc(13px * var(--fs));
+    padding:8px 10px; font-family:'Noto Sans TC',sans-serif; font-size:13px;
     resize:vertical; min-height:52px; color:var(--ink);
   }
   .note-body textarea:focus{outline:none; border-color:var(--pink);}
@@ -353,11 +341,11 @@
   .day-note-row{ display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; }
   .day-note-label{
     flex:none; width:54px; padding-top:8px; text-align:right;
-    font-size:calc(11.5px * var(--fs)); font-weight:700; color:var(--ink-soft); font-family:'Fredoka',sans-serif;
+    font-size:11.5px; font-weight:700; color:var(--ink-soft); font-family:'Fredoka',sans-serif;
   }
   .day-note-row textarea{
     flex:1; border:1.5px solid var(--gray); border-radius:10px;
-    padding:6px 9px; font-family:'Noto Sans TC',sans-serif; font-size:calc(13px * var(--fs));
+    padding:6px 9px; font-family:'Noto Sans TC',sans-serif; font-size:13px;
     resize:vertical; min-height:36px; color:var(--ink);
   }
   .day-note-row textarea:focus{outline:none; border-color:var(--pink);}
@@ -365,30 +353,30 @@
   .list-item{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
   .list-item input[type=text]{
     flex:1; border:1.5px solid var(--gray); border-radius:8px;
-    padding:7px 9px; font-size:calc(13px * var(--fs)); font-family:'Noto Sans TC',sans-serif;
+    padding:7px 9px; font-size:13px; font-family:'Noto Sans TC',sans-serif;
   }
   .list-item input[type=text].link-title{flex:0.7;}
   .list-item input[type=text].link-url{flex:1; color:#1c6fa8;}
   .list-item input[type=text]:focus{outline:none; border-color:var(--blue);}
-  .list-item .rm{ background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:calc(16px * var(--fs)); padding:2px 6px; }
+  .list-item .rm{ background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:16px; padding:2px 6px; }
   .list-item .rm:hover{color:#d64545;}
   .add-row-btn{
     background:var(--blue-light); color:#1c6fa8; border:none;
-    padding:7px 12px; border-radius:999px; font-size:calc(12px * var(--fs)); font-weight:700;
+    padding:7px 12px; border-radius:999px; font-size:12px; font-weight:700;
     cursor:pointer; font-family:'Fredoka',sans-serif;
   }
   .add-row-btn:hover{filter:brightness(0.97);}
   .todo-item{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
   .todo-item input[type=checkbox]{width:18px; height:18px; accent-color:var(--pink);}
-  .todo-item input[type=text]{flex:1; border:1.5px solid var(--gray); border-radius:8px; padding:7px 9px; font-size:calc(13px * var(--fs));}
+  .todo-item input[type=text]{flex:1; border:1.5px solid var(--gray); border-radius:8px; padding:7px 9px; font-size:13px;}
   .todo-item.done input[type=text]{text-decoration:line-through; color:var(--ink-soft);}
-  .link-row a{font-size:calc(12px * var(--fs)); color:#1c6fa8; word-break:break-all;}
+  .link-row a{font-size:12px; color:#1c6fa8; word-break:break-all;}
 
   .fab{
     position:fixed; right:20px; bottom:26px; z-index:60;
     background:linear-gradient(135deg, var(--pink), var(--pink-deep));
     color:white; border:none; border-radius:999px;
-    padding:15px 22px; font-size:calc(14.5px * var(--fs)); font-weight:700;
+    padding:15px 22px; font-size:14.5px; font-weight:700;
     font-family:'Fredoka',sans-serif;
     box-shadow:0 10px 24px rgba(232,85,137,0.45);
     cursor:pointer; display:flex; align-items:center; gap:6px;
@@ -399,45 +387,29 @@
   .toast{
     position:fixed; bottom:100px; left:50%; transform:translateX(-50%);
     background:var(--ink); color:white; padding:8px 16px; border-radius:999px;
-    font-size:calc(12px * var(--fs)); opacity:0; transition:opacity .3s; z-index:70; pointer-events:none;
+    font-size:12px; opacity:0; transition:opacity .3s; z-index:70; pointer-events:none;
   }
   .toast.show{opacity:0.92;}
-
-  /* ---------- Batch multi-select coloring ---------- */
-  body.batch-mode [data-batchkind]{ cursor:pointer; }
-  [data-batchkind].batch-selected{
-    outline:3px solid var(--pink-deep); outline-offset:-2px;
-    box-shadow:0 0 0 5px rgba(232,85,137,0.25);
-  }
-  .batch-bar{
-    position:fixed; left:0; right:0; bottom:0; z-index:80;
-    display:none; justify-content:center;
-    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
-    background:rgba(255,255,255,0.97); backdrop-filter:blur(6px);
-    box-shadow:0 -6px 20px rgba(180,130,160,0.18);
-  }
-  .batch-bar.show{ display:flex; }
-  .batch-bar-inner{
-    max-width:720px; width:100%; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-  }
-  .batch-bar-label{
-    font-family:'Fredoka',sans-serif; font-weight:700; font-size:12.5px; color:var(--ink); flex:none;
-  }
-  .batch-swatch-grid{ display:flex; gap:5px; flex-wrap:wrap; flex:1; }
-  .batch-swatch-grid span{
-    width:22px; height:22px; border-radius:50%; cursor:pointer; flex:none;
-    border:2px solid white; box-shadow:0 0 0 1px rgba(0,0,0,0.1);
-  }
-  .batch-done-btn{
-    font-family:'Fredoka',sans-serif; font-weight:700; font-size:12.5px;
-    border:none; border-radius:999px; padding:8px 16px; cursor:pointer;
-    background:var(--pink); color:white; flex:none;
-  }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 </head>
 <body>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div class="big-emoji">🔒</div>
+    <h2>課程進度表</h2>
+    <p class="sub">請登入才能查看與編輯課表</p>
+    <input type="email" id="loginEmail" placeholder="Email" autocomplete="username">
+    <input type="password" id="loginPassword" placeholder="密碼" autocomplete="current-password">
+    <button class="login-btn" id="loginBtn">登入</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<div id="appRoot" class="app-hidden">
 
 <div class="topbar">
   <span class="deco" style="left:14px; top:14px;">☁️</span>
@@ -449,16 +421,6 @@
 <div class="toolbar">
   <button class="tool-btn save" id="saveBtn">💾 儲存</button>
   <button class="tool-btn restore" id="restoreBtn">↩️ 還原上次儲存</button>
-  <div class="fontsize-ctrl" title="整份課表字級">
-    <button class="fs-btn" id="fsDownBtn" title="縮小文字">A−</button>
-    <button class="fs-btn" id="fsUpBtn" title="放大文字">A+</button>
-  </div>
-  <div class="fontsize-ctrl" title="節次／時間欄字級">
-    <span class="fs-label">節次/時間</span>
-    <button class="fs-btn" id="rowFsDownBtn" title="縮小節次/時間文字">A−</button>
-    <button class="fs-btn" id="rowFsUpBtn" title="放大節次/時間文字">A+</button>
-  </div>
-  <button class="tool-btn batch" id="batchToggleBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
 </div>
 
@@ -473,12 +435,7 @@
 <button class="jump-fab" id="jumpBtn">📍 本週</button>
 <div class="toast" id="toast"></div>
 <div class="sel-toolbar" id="selToolbar"></div>
-<div class="batch-bar" id="batchBar">
-  <div class="batch-bar-inner">
-    <span class="batch-bar-label">已選 <span id="batchCount">0</span> 格 · 點色塊套用</span>
-    <div class="batch-swatch-grid" id="batchSwatchGrid"></div>
-    <button class="batch-done-btn" id="batchDoneBtn">完成</button>
-  </div>
+
 </div>
 
 <script>
@@ -495,67 +452,6 @@ const TEXT_COLORS = [
   '#6E8F87','#B23A5E','#A65B7D','#C98CA0','#8F5B82','#6B5B73','#8C7A5C','#B08268','#FFFFFF'
 ];
 const STORAGE_KEY = 'nature-class-weekly-schedules';
-const FONT_SCALE_KEY = 'nature-class-font-scale';
-const FONT_SCALE_MIN = 0.8, FONT_SCALE_MAX = 1.8, FONT_SCALE_STEP = 0.1;
-
-function applyFontScale(scale){
-  scale = Math.min(FONT_SCALE_MAX, Math.max(FONT_SCALE_MIN, scale));
-  document.documentElement.style.setProperty('--fs', scale);
-  try{ localStorage.setItem(FONT_SCALE_KEY, String(scale)); }catch(e){}
-  return scale;
-}
-
-function initFontScale(){
-  let saved = 1;
-  try{
-    const raw = localStorage.getItem(FONT_SCALE_KEY);
-    if(raw) saved = parseFloat(raw) || 1;
-  }catch(e){}
-  applyFontScale(saved);
-
-  const upBtn = document.getElementById('fsUpBtn');
-  const downBtn = document.getElementById('fsDownBtn');
-  upBtn.addEventListener('click', ()=>{
-    const current = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs')) || 1;
-    applyFontScale(current + FONT_SCALE_STEP);
-  });
-  downBtn.addEventListener('click', ()=>{
-    const current = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs')) || 1;
-    applyFontScale(current - FONT_SCALE_STEP);
-  });
-}
-initFontScale();
-
-const ROW_FONT_SCALE_KEY = 'nature-class-row-font-scale';
-const ROW_FONT_SCALE_MIN = 0.7, ROW_FONT_SCALE_MAX = 2.2, ROW_FONT_SCALE_STEP = 0.1;
-
-function applyRowFontScale(scale){
-  scale = Math.min(ROW_FONT_SCALE_MAX, Math.max(ROW_FONT_SCALE_MIN, scale));
-  document.documentElement.style.setProperty('--rowfs', scale);
-  try{ localStorage.setItem(ROW_FONT_SCALE_KEY, String(scale)); }catch(e){}
-  return scale;
-}
-
-function initRowFontScale(){
-  let saved = 1;
-  try{
-    const raw = localStorage.getItem(ROW_FONT_SCALE_KEY);
-    if(raw) saved = parseFloat(raw) || 1;
-  }catch(e){}
-  applyRowFontScale(saved);
-
-  const upBtn = document.getElementById('rowFsUpBtn');
-  const downBtn = document.getElementById('rowFsDownBtn');
-  upBtn.addEventListener('click', ()=>{
-    const current = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--rowfs')) || 1;
-    applyRowFontScale(current + ROW_FONT_SCALE_STEP);
-  });
-  downBtn.addEventListener('click', ()=>{
-    const current = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--rowfs')) || 1;
-    applyRowFontScale(current - ROW_FONT_SCALE_STEP);
-  });
-}
-initRowFontScale();
 
 const firebaseConfig = {
   apiKey: "AIzaSyA1xjQ1eXF7cFc6W2AenQWSWxPxEnmhSII",
@@ -568,6 +464,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 const CLOUD_DOC = db.collection('schedules').doc('main');
 let cards = [];
 let loaded = false;
@@ -594,9 +491,6 @@ function defaultCard(){
     periodTimes: {1:'8:40~9:20',2:'9:30~10:10',3:'10:30~11:10',4:'11:20~12:00',5:'13:10~13:50',6:'14:00~14:40',7:'14:50~15:30'},
     breaksA: [ {label:'午餐、潔牙', time:'12:00~12:30'}, {label:'午休時間', time:'12:30~13:05'} ],
     breaksB: [ {label:'整潔時間', time:'15:30~15:50'}, {label:'降旗放學', time:'15:50~16:00'} ],
-    headerColors: { period: null, time: null, days: {0:null,1:null,2:null,3:null,4:null} },
-    breakColors: { breaksA: [null, null], breaksB: [null, null] },
-    rowColors: {1:{num:null,time:null},2:{num:null,time:null},3:{num:null,time:null},4:{num:null,time:null},5:{num:null,time:null},6:{num:null,time:null},7:{num:null,time:null}},
     cells,
     notes: {
       highlights: {0:'',1:'',2:'',3:'',4:''},
@@ -672,20 +566,6 @@ function normalizeCard(c){
   c.notes.equipment = c.notes.equipment || '';
   c.notes.links = c.notes.links || [];
   c.notes.todos = c.notes.todos || [];
-  c.headerColors = c.headerColors || {};
-  if(c.headerColors.period === undefined) c.headerColors.period = null;
-  if(c.headerColors.time === undefined) c.headerColors.time = null;
-  c.headerColors.days = c.headerColors.days || {};
-  [0,1,2,3,4].forEach(d=>{ if(c.headerColors.days[d] === undefined) c.headerColors.days[d] = null; });
-  c.breakColors = c.breakColors || {};
-  c.breakColors.breaksA = c.breakColors.breaksA || [null, null];
-  c.breakColors.breaksB = c.breakColors.breaksB || [null, null];
-  c.rowColors = c.rowColors || {};
-  [1,2,3,4,5,6,7].forEach(n=>{
-    c.rowColors[n] = c.rowColors[n] || {};
-    if(c.rowColors[n].num === undefined) c.rowColors[n].num = null;
-    if(c.rowColors[n].time === undefined) c.rowColors[n].time = null;
-  });
   if(c.cells){
     Object.keys(c.cells).forEach(n=>{
       Object.keys(c.cells[n]).forEach(d=>{
@@ -822,29 +702,17 @@ function removeCard(id){
 
 function escapeAttr(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 function escapeHTML(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function normalizeUrl(u){
-  u = (u||'').trim();
-  if(!u) return '';
-  // already has a scheme (http:, https:, mailto:, tel:, etc.) — leave it alone;
-  // otherwise it's a bare domain like "www.youtube.com" which the browser would
-  // otherwise resolve as a path relative to this app's own URL
-  if(/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(u)) return u;
-  return 'https://' + u;
-}
 
 function periodRowHTML(card, n){
   const time = card.periodTimes[n];
   const num = card.periodNums[n];
-  const rowBg = card.rowColors[n] || {num:null, time:null};
-  const numBg = rowBg.num || 'var(--gray-light)';
-  const timeBg = rowBg.time || 'var(--gray-light)';
   let daysHTML = '';
   for(let d=0; d<5; d++){
     const cell = card.cells[n][d];
     const weight = cell.bold===false ? '400' : '700';
     const classNameWeight = cell.classNameBold ? '700' : '400';
     daysHTML += `
-    <div class="period-cell" data-batchkind="course" data-card="${card.id}" data-a="${n}" data-b="${d}" style="background:${cell.color}; color:${cell.textColor||'#4A4258'};">
+    <div class="period-cell" style="background:${cell.color}; color:${cell.textColor||'#4A4258'};">
       <div class="top-row">
         <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
         <textarea class="classname autogrow" rows="1" placeholder="班級" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
@@ -853,23 +721,15 @@ function periodRowHTML(card, n){
     </div>`;
   }
   return `
-  <div class="cell-num" data-batchkind="rownum" data-card="${card.id}" data-a="${n}" style="background:${numBg}">
-    <span class="h-dot" style="background:${numBg}" data-role="rowcolor" data-card="${card.id}" data-period="${n}" data-kind="num"></span>
-    <textarea class="rowfield autogrow" rows="1" data-role="periodnum" data-card="${card.id}" data-period="${n}">${escapeHTML(num)}</textarea>
-  </div>
-  <div class="cell-time" data-batchkind="rowtime" data-card="${card.id}" data-a="${n}" style="background:${timeBg}">
-    <span class="h-dot" style="background:${timeBg}" data-role="rowcolor" data-card="${card.id}" data-period="${n}" data-kind="time"></span>
-    <textarea class="rowfield autogrow" rows="1" data-role="periodtime" data-card="${card.id}" data-period="${n}">${escapeHTML(time)}</textarea>
-  </div>
+  <div class="cell-num"><input type="text" value="${escapeAttr(num)}" data-role="periodnum" data-card="${card.id}" data-period="${n}"></div>
+  <div class="cell-time"><input type="text" value="${escapeAttr(time)}" data-role="periodtime" data-card="${card.id}" data-period="${n}"></div>
   ${daysHTML}`;
 }
 
 function breakRowHTML(card, group, idx){
   const b = card[group][idx];
-  const bg = (card.breakColors && card.breakColors[group] && card.breakColors[group][idx]) || 'var(--pink-light)';
   return `
-  <div class="break-row" data-batchkind="break" data-card="${card.id}" data-a="${group}" data-b="${idx}" style="background:${bg}">
-    <span class="b-dot" style="background:${bg}" data-role="breakcolor" data-card="${card.id}" data-group="${group}" data-idx="${idx}"></span>
+  <div class="break-row">
     <input class="blabel" type="text" value="${escapeAttr(b.label)}" data-role="breaklabel" data-card="${card.id}" data-group="${group}" data-idx="${idx}">
     <input class="btime" type="text" value="${escapeAttr(b.time)}" data-role="breaktime" data-card="${card.id}" data-group="${group}" data-idx="${idx}">
   </div>`;
@@ -909,7 +769,7 @@ function linksSection(card){
       <input type="text" class="link-url" placeholder="https://..." value="${escapeAttr(l.url)}" data-role="link-url" data-card="${card.id}" data-idx="${i}">
       <button class="rm" data-role="link-rm" data-card="${card.id}" data-idx="${i}">✕</button>
     </div>`).join('');
-  const linkList = links.filter(l=>l.url).map(l=>`<div class="link-row">🔗 <a href="${escapeAttr(normalizeUrl(l.url))}" target="_blank" rel="noopener">${escapeHTML(l.title||l.url)}</a></div>`).join('');
+  const linkList = links.filter(l=>l.url).map(l=>`<div class="link-row">🔗 <a href="${escapeAttr(l.url)}" target="_blank" rel="noopener">${escapeHTML(l.title||l.url)}</a></div>`).join('');
   return `
   <details class="note">
     <summary>🔗 相關網頁 <span class="arrow">▶</span></summary>
@@ -941,13 +801,10 @@ function todosSection(card){
 
 function cardHTML(card){
   let gridRows = '';
-  const periodBg = card.headerColors.period || 'var(--pink-light)';
-  const timeBg = card.headerColors.time || 'var(--pink-light)';
-  gridRows += `<div class="hcell rowlabel" data-batchkind="hcell" data-card="${card.id}" data-a="period" style="background:${periodBg}"><span class="h-dot" style="background:${periodBg}" data-role="hcolor" data-card="${card.id}" data-key="period"></span><input type="text" value="${escapeAttr(card.colLabels.period)}" data-role="collabel" data-card="${card.id}" data-key="period"></div>`;
-  gridRows += `<div class="hcell rowlabel" data-batchkind="hcell" data-card="${card.id}" data-a="time" style="background:${timeBg}"><span class="h-dot" style="background:${timeBg}" data-role="hcolor" data-card="${card.id}" data-key="time"></span><input type="text" value="${escapeAttr(card.colLabels.time)}" data-role="collabel" data-card="${card.id}" data-key="time"></div>`;
+  gridRows += `<div class="hcell"><input type="text" value="${escapeAttr(card.colLabels.period)}" data-role="collabel" data-card="${card.id}" data-key="period"></div>`;
+  gridRows += `<div class="hcell"><input type="text" value="${escapeAttr(card.colLabels.time)}" data-role="collabel" data-card="${card.id}" data-key="time"></div>`;
   card.days.forEach((day,d)=>{
-    const dayBg = card.headerColors.days[d] || 'var(--pink-light)';
-    gridRows += `<div class="hcell" data-batchkind="hcellday" data-card="${card.id}" data-a="${d}" style="background:${dayBg}"><span class="h-dot" style="background:${dayBg}" data-role="hcolor-day" data-card="${card.id}" data-day="${d}"></span><input type="text" value="${escapeAttr(day)}" data-role="daylabel" data-card="${card.id}" data-day="${d}"></div>`;
+    gridRows += `<div class="hcell"><input type="text" value="${escapeAttr(day)}" data-role="daylabel" data-card="${card.id}" data-day="${d}"></div>`;
   });
 
   [1,2,3,4].forEach(n=>{ gridRows += periodRowHTML(card, n); });
@@ -1070,22 +927,7 @@ document.getElementById('cardsWrap').addEventListener('input', (e)=>{
   }
 });
 
-document.getElementById('cardsWrap').addEventListener('mousedown', (e)=>{
-  if(batchMode && e.target.closest('[data-batchkind]')){
-    e.preventDefault();
-  }
-});
-
 document.getElementById('cardsWrap').addEventListener('click', (e)=>{
-  if(batchMode){
-    const bt = e.target.closest('[data-batchkind]');
-    if(bt){
-      e.stopPropagation();
-      e.preventDefault();
-      toggleBatchTarget(bt);
-    }
-    return;
-  }
   const t = e.target;
   const role = t.dataset.role;
   if(!role) return;
@@ -1098,31 +940,6 @@ document.getElementById('cardsWrap').addEventListener('click', (e)=>{
     return;
   }
   if(role === 'cellstyle'){ e.stopPropagation(); openCellStylePopover(t, cardId, t.dataset.period, t.dataset.day); return; }
-  if(role === 'hcolor'){
-    e.stopPropagation();
-    const key = t.dataset.key;
-    openSimpleColorPopover(t, card.headerColors[key], (c)=>{ card.headerColors[key] = c; render(); saveState(); });
-    return;
-  }
-  if(role === 'hcolor-day'){
-    e.stopPropagation();
-    const dIdx = t.dataset.day;
-    openSimpleColorPopover(t, card.headerColors.days[dIdx], (c)=>{ card.headerColors.days[dIdx] = c; render(); saveState(); });
-    return;
-  }
-  if(role === 'rowcolor'){
-    e.stopPropagation();
-    const pn = t.dataset.period, kind = t.dataset.kind;
-    card.rowColors[pn] = card.rowColors[pn] || {};
-    openSimpleColorPopover(t, card.rowColors[pn][kind], (c)=>{ card.rowColors[pn][kind] = c; render(); saveState(); });
-    return;
-  }
-  if(role === 'breakcolor'){
-    e.stopPropagation();
-    const grp = t.dataset.group, bIdx = Number(t.dataset.idx);
-    openSimpleColorPopover(t, card.breakColors[grp][bIdx], (c)=>{ card.breakColors[grp][bIdx] = c; render(); saveState(); });
-    return;
-  }
   if(role === 'link-add'){ card.notes.links.push({title:'', url:''}); render(); saveState(); return; }
   if(role === 'link-rm'){ card.notes.links.splice(Number(t.dataset.idx),1); render(); saveState(); return; }
   if(role === 'todo-add'){ card.notes.todos.push({text:'', done:false}); render(); saveState(); return; }
@@ -1155,49 +972,6 @@ document.getElementById('cardsWrap').addEventListener('change', (e)=>{
   if(role === 'todo-text'){ card.notes.todos[idx].text = t.value; saveState(); return; }
   if(role === 'todo-check'){ card.notes.todos[idx].done = t.checked; render(); saveState(); return; }
 });
-
-function openSimpleColorPopover(anchor, currentColor, onPick){
-  document.querySelectorAll('.style-pop').forEach(p=>p.remove());
-
-  const pop = document.createElement('div');
-  pop.className = 'style-pop show';
-
-  const label = document.createElement('div');
-  label.className = 'style-pop-label';
-  label.textContent = '背景顏色';
-  pop.appendChild(label);
-
-  const grid = document.createElement('div');
-  grid.className = 'swatch-grid';
-  PALETTE.forEach(c=>{
-    const sw = document.createElement('span');
-    sw.className = 'swatch' + (c===currentColor ? ' active' : '');
-    sw.style.background = c;
-    sw.addEventListener('click', ()=>{ onPick(c); pop.remove(); });
-    grid.appendChild(sw);
-  });
-  pop.appendChild(grid);
-
-  const resetBtn = document.createElement('button');
-  resetBtn.className = 'pop-close';
-  resetBtn.textContent = '↩️ 恢復預設色';
-  resetBtn.addEventListener('click', ()=>{ onPick(null); pop.remove(); });
-  pop.appendChild(resetBtn);
-
-  document.body.appendChild(pop);
-  const r = anchor.getBoundingClientRect();
-  const popW = 236;
-  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - popW - 8)) + 'px';
-  pop.style.top = (r.bottom + 6) + 'px';
-
-  const closeOnce = (ev)=>{
-    if(!pop.contains(ev.target) && ev.target !== anchor){
-      pop.remove();
-      document.removeEventListener('click', closeOnce);
-    }
-  };
-  setTimeout(()=>document.addEventListener('click', closeOnce), 10);
-}
 
 function openCellStylePopover(anchor, cardId, periodN, dayIdx){
   document.querySelectorAll('.style-pop').forEach(p=>p.remove());
@@ -1294,79 +1068,22 @@ function buildSelToolbar(){
     const borderExtra = c === '#FFFFFF' ? 'border:2px solid #ddd;' : '';
     html += `<span class="csw" data-color="${c}" style="background:${c};${borderExtra}"></span>`;
   });
-  html += '</div><div class="csep"></div><button type="button" class="selfont-btn" id="selFontDownBtn" title="縮小這段文字">A−</button><button type="button" class="selfont-btn" id="selFontUpBtn" title="放大這段文字">A+</button><div class="csep"></div><button type="button" class="selbold-btn" id="selBoldBtn">B</button><button type="button" class="selclear-btn" id="selClearBtn" title="清除此段格式">⨯</button>';
+  html += '</div><div class="csep"></div><button type="button" class="selbold-btn" id="selBoldBtn">B</button><button type="button" class="selclear-btn" id="selClearBtn" title="清除此段格式">⨯</button>';
   bar.innerHTML = html;
 
   bar.querySelectorAll('.csw').forEach(sw=>{
     sw.addEventListener('pointerdown', e=>e.preventDefault());
-    sw.addEventListener('mousedown', e=>e.preventDefault());
     sw.addEventListener('click', ()=>applyToSelection('foreColor', sw.dataset.color));
   });
   const boldBtn = document.getElementById('selBoldBtn');
   boldBtn.addEventListener('pointerdown', e=>e.preventDefault());
-  boldBtn.addEventListener('mousedown', e=>e.preventDefault());
   boldBtn.addEventListener('click', ()=>applyToSelection('bold'));
 
   const clearBtn = document.getElementById('selClearBtn');
   clearBtn.addEventListener('pointerdown', e=>e.preventDefault());
-  clearBtn.addEventListener('mousedown', e=>e.preventDefault());
   clearBtn.addEventListener('click', ()=>applyToSelection('removeFormat'));
-
-  const fontDownBtn = document.getElementById('selFontDownBtn');
-  fontDownBtn.addEventListener('pointerdown', e=>e.preventDefault());
-  fontDownBtn.addEventListener('mousedown', e=>e.preventDefault());
-  fontDownBtn.addEventListener('click', ()=>changeSelectionFontSize(-1.5));
-
-  const fontUpBtn = document.getElementById('selFontUpBtn');
-  fontUpBtn.addEventListener('pointerdown', e=>e.preventDefault());
-  fontUpBtn.addEventListener('mousedown', e=>e.preventDefault());
-  fontUpBtn.addEventListener('click', ()=>changeSelectionFontSize(1.5));
 }
 buildSelToolbar();
-
-function changeSelectionFontSize(delta){
-  if(!activeCourseEl || !savedRange) return;
-  activeCourseEl.focus();
-  const sel = window.getSelection();
-  sel.removeAllRanges();
-  sel.addRange(savedRange);
-  const range = sel.getRangeAt(0);
-  if(range.collapsed) return;
-
-  // figure out the current rendered size at the start of the selection
-  let node = range.startContainer;
-  let refEl = node.nodeType === 3 ? node.parentElement : node;
-  const currentPx = parseFloat(window.getComputedStyle(refEl).fontSize) || 12.5;
-  const newPx = Math.max(8, Math.min(60, Math.round((currentPx + delta) * 10) / 10));
-
-  // wrap the exact selected range in a span with the new pixel size —
-  // plain DOM surgery instead of execCommand, so there's no browser-specific
-  // "jump to a huge default size" quirk
-  const span = document.createElement('span');
-  span.style.fontSize = newPx + 'px';
-  try{
-    range.surroundContents(span);
-  }catch(err){
-    // selection crosses existing element boundaries (e.g. spans two differently
-    // colored runs) — surroundContents can't handle that, so extract + rewrap instead
-    const frag = range.extractContents();
-    span.appendChild(frag);
-    range.insertNode(span);
-  }
-
-  // reselect the wrapped text so the next click (or the color/bold buttons) still targets it
-  const newRange = document.createRange();
-  newRange.selectNodeContents(span);
-  sel.removeAllRanges();
-  sel.addRange(newRange);
-  savedRange = newRange.cloneRange();
-
-  const card = getCard(activeCourseEl.dataset.card);
-  if(card){
-    card.cells[activeCourseEl.dataset.period][activeCourseEl.dataset.day].course = activeCourseEl.innerHTML;
-    debouncedSave();
-  }
-}
 
 function applyToSelection(cmd, val){
   if(!activeCourseEl || !savedRange) return;
@@ -1432,78 +1149,40 @@ document.addEventListener('mousedown', (e)=>{
   }
 });
 
-/* ---------- Batch multi-select coloring ---------- */
-let batchMode = false;
-let batchSelection = new Set();
+/* ---------- Login / auth gating ---------- */
+const loginOverlay = document.getElementById('loginOverlay');
+const appRoot = document.getElementById('appRoot');
+const loginError = document.getElementById('loginError');
+const loginBtn = document.getElementById('loginBtn');
 
-function batchKey(kind, cardId, a, b){
-  return [kind, cardId, a, b===undefined ? '' : b].join('|');
+function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if(!email || !password){ loginError.textContent = '請輸入 Email 與密碼'; return; }
+  loginBtn.disabled = true;
+  loginError.textContent = '';
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(err=>{
+      loginError.textContent = '登入失敗，請確認帳號密碼是否正確';
+      console.error(err);
+    })
+    .finally(()=>{ loginBtn.disabled = false; });
 }
+loginBtn.addEventListener('click', doLogin);
+document.getElementById('loginPassword').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') doLogin();
+});
 
-function updateBatchCount(){
-  const el = document.getElementById('batchCount');
-  if(el) el.textContent = String(batchSelection.size);
-}
-
-function toggleBatchTarget(el){
-  const kind = el.dataset.batchkind;
-  const cardId = el.dataset.card;
-  const a = el.dataset.a;
-  const b = el.dataset.b;
-  const key = batchKey(kind, cardId, a, b);
-  if(batchSelection.has(key)){
-    batchSelection.delete(key);
-    el.classList.remove('batch-selected');
+auth.onAuthStateChanged(user=>{
+  if(user){
+    loginOverlay.classList.add('app-hidden');
+    appRoot.classList.remove('app-hidden');
+    if(!loaded) loadState();
   }else{
-    batchSelection.add(key);
-    el.classList.add('batch-selected');
+    loginOverlay.classList.remove('app-hidden');
+    appRoot.classList.add('app-hidden');
   }
-  updateBatchCount();
-}
-
-function applyBatchColor(color){
-  if(batchSelection.size === 0) return;
-  batchSelection.forEach(key=>{
-    const [kind, cardId, a, b] = key.split('|');
-    const card = getCard(cardId);
-    if(!card) return;
-    if(kind === 'course'){ card.cells[a][b].color = color; }
-    else if(kind === 'rownum'){ card.rowColors[a] = card.rowColors[a] || {}; card.rowColors[a].num = color; }
-    else if(kind === 'rowtime'){ card.rowColors[a] = card.rowColors[a] || {}; card.rowColors[a].time = color; }
-    else if(kind === 'hcell'){ card.headerColors[a] = color; }
-    else if(kind === 'hcellday'){ card.headerColors.days[a] = color; }
-    else if(kind === 'break'){ card.breakColors[a][Number(b)] = color; }
-  });
-  batchSelection.clear();
-  render();
-  saveState();
-  showToast('✅ 已套用顏色到選取的格子');
-}
-
-function setBatchMode(on){
-  batchMode = on;
-  batchSelection.clear();
-  document.body.classList.toggle('batch-mode', batchMode);
-  document.getElementById('batchBar').classList.toggle('show', batchMode);
-  document.getElementById('batchToggleBtn').classList.toggle('active', batchMode);
-  updateBatchCount();
-  render();
-}
-
-function initBatchMode(){
-  const grid = document.getElementById('batchSwatchGrid');
-  PALETTE.forEach(c=>{
-    const sw = document.createElement('span');
-    sw.style.background = c;
-    sw.addEventListener('click', ()=>applyBatchColor(c));
-    grid.appendChild(sw);
-  });
-  document.getElementById('batchToggleBtn').addEventListener('click', ()=>setBatchMode(!batchMode));
-  document.getElementById('batchDoneBtn').addEventListener('click', ()=>setBatchMode(false));
-}
-initBatchMode();
-
-loadState();
+});
 </script>
 </body>
 </html>
