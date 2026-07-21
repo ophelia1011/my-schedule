@@ -390,6 +390,22 @@
     font-size:12px; opacity:0; transition:opacity .3s; z-index:70; pointer-events:none;
   }
   .toast.show{opacity:0.92;}
+
+  .cloud-conflict-bar{
+    position:fixed; left:12px; right:12px; bottom:96px; z-index:80;
+    display:none; flex-direction:column; gap:8px; align-items:center;
+    background:white; border-radius:14px; padding:12px 14px;
+    box-shadow:var(--shadow); font-size:13px; color:var(--ink); text-align:center;
+    border:2px solid var(--pink-light);
+  }
+  .cloud-conflict-bar.show{display:flex;}
+  .cloud-conflict-actions{display:flex; gap:8px;}
+  .cloud-conflict-actions button{
+    border:none; border-radius:10px; padding:8px 14px; font-size:13px; font-weight:700;
+    font-family:'Fredoka',sans-serif; cursor:pointer;
+  }
+  #useCloudBtn{background:var(--pink); color:white;}
+  #keepLocalBtn{background:var(--gray-light); color:var(--ink);}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -435,6 +451,13 @@
 <button class="jump-fab" id="jumpBtn">📍 本週</button>
 <div class="toast" id="toast"></div>
 <div class="sel-toolbar" id="selToolbar"></div>
+<div class="cloud-conflict-bar" id="cloudConflictBar">
+  <span>☁️ 雲端有另一份資料，內容跟這台裝置不一樣</span>
+  <div class="cloud-conflict-actions">
+    <button id="useCloudBtn">套用雲端版本</button>
+    <button id="keepLocalBtn">保留本機版本</button>
+  </div>
+</div>
 
 </div>
 
@@ -595,22 +618,37 @@ function applyLoadedCards(rawCards, statusMsg){
   if(statusMsg) setStatus(statusMsg);
 }
 
+let pendingCloudCards = null;
+
 function loadState(){
   // 1) show whatever is on this device immediately (fast, works offline)
+  let localRaw = null;
   try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    applyLoadedCards(raw ? JSON.parse(raw) : [], raw ? '已載入本機課表，正在連線雲端…' : '尚未儲存');
+    localRaw = localStorage.getItem(STORAGE_KEY);
+    applyLoadedCards(localRaw ? JSON.parse(localRaw) : [], localRaw ? '已載入本機課表，正在連線雲端…' : '尚未儲存');
   }catch(e){
     console.error('load failed', e);
     applyLoadedCards([], '尚未儲存');
   }
 
-  // 2) then check the cloud for the latest version from any device
+  // 2) then check the cloud — never auto-overwrite existing local data;
+  //    only ask if the two differ, so nothing gets silently lost.
   CLOUD_DOC.get().then(snap=>{
     if(snap.exists && snap.data() && snap.data().data){
-      const cloudCards = JSON.parse(snap.data().data);
-      applyLoadedCards(cloudCards, '☁️ 已同步雲端最新資料');
-      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudCards)); }catch(e){}
+      const cloudRaw = snap.data().data;
+      if(!localRaw || localRaw.trim() === '' || JSON.parse(localRaw).length === 0){
+        // nothing to lose locally — safe to apply cloud data automatically
+        const cloudCards = JSON.parse(cloudRaw);
+        applyLoadedCards(cloudCards, '☁️ 已同步雲端資料');
+        try{ localStorage.setItem(STORAGE_KEY, cloudRaw); }catch(e){}
+      }else if(cloudRaw !== localRaw){
+        // both have data and they differ — let the person choose, don't overwrite silently
+        pendingCloudCards = JSON.parse(cloudRaw);
+        setStatus('已載入本機課表（雲端資料不同，待確認）');
+        document.getElementById('cloudConflictBar').classList.add('show');
+      }else{
+        setStatus('☁️ 本機與雲端資料一致');
+      }
     }else{
       setStatus(cards.length ? '已載入本機課表（雲端尚無資料）' : '尚未儲存');
     }
@@ -619,6 +657,22 @@ function loadState(){
     setStatus('⚠️ 無法連線雲端，目前顯示本機資料');
   });
 }
+
+document.getElementById('useCloudBtn').addEventListener('click', ()=>{
+  if(pendingCloudCards){
+    applyLoadedCards(pendingCloudCards, '☁️ 已套用雲端版本');
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(pendingCloudCards)); }catch(e){}
+    saveState();
+  }
+  pendingCloudCards = null;
+  document.getElementById('cloudConflictBar').classList.remove('show');
+});
+document.getElementById('keepLocalBtn').addEventListener('click', ()=>{
+  pendingCloudCards = null;
+  setStatus('已保留本機課表');
+  document.getElementById('cloudConflictBar').classList.remove('show');
+  saveState(); // push this device's version to the cloud so it becomes the shared copy
+});
 
 function restoreFromBackup(){
   try{
