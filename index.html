@@ -93,6 +93,12 @@
   .period-cell.multiselectable .course,
   .period-cell.multiselectable .classname,
   .period-cell.multiselectable .color-dot{ pointer-events:none; }
+  .cell-num.multi-selected, .cell-time.multi-selected{
+    outline:3px solid var(--pink-deep); outline-offset:-3px;
+  }
+  .cell-num.multiselectable, .cell-time.multiselectable{ cursor:pointer; }
+  .cell-num.multiselectable input, .cell-time.multiselectable input,
+  .cell-num.multiselectable .color-dot, .cell-time.multiselectable .color-dot{ pointer-events:none; }
 
   .multiselect-bar{
     position:fixed; left:12px; right:12px; bottom:20px; z-index:85;
@@ -198,7 +204,7 @@
   .hcell{
     background:var(--pink-light);
     border-radius:10px;
-    padding:6px 4px;
+    padding:6px 4px 6px 12px;
     text-align:center;
     position:relative;
     display:flex; align-items:center; justify-content:center;
@@ -212,7 +218,7 @@
   .cell-num,.cell-time{
     position:relative;
     display:flex; align-items:center; justify-content:center;
-    background:var(--gray-light); border-radius:10px; padding:4px 2px;
+    background:var(--gray-light); border-radius:10px; padding:4px 2px 4px 10px;
   }
   .color-dot.period-dot{ position:absolute; top:2px; left:2px; width:8px; height:8px; }
   .color-dot.break-dot{width:9px; height:9px;}
@@ -640,7 +646,10 @@ function defaultCard(){
     weekLabel: '',
     weekStart: '',
     colLabels: { period:'節次', time:'Time' },
-    headerStyle: { color:'', textColor:'' },
+    headerStyle: { period:{color:'',textColor:''}, time:{color:'',textColor:''},
+      day0:{color:'',textColor:''}, day1:{color:'',textColor:''}, day2:{color:'',textColor:''},
+      day3:{color:'',textColor:''}, day4:{color:'',textColor:''} },
+    periodTimeStyle: {},
     days: ['Monday','Tuesday','Wednesday','Thursday','Friday'],
     periodNums: {1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7'},
     periodTimes: {1:'8:40~9:20',2:'9:30~10:10',3:'10:30~11:10',4:'11:20~12:00',5:'13:10~13:50',6:'14:00~14:40',7:'14:50~15:30'},
@@ -736,7 +745,23 @@ function normalizeCard(c){
   });
 
   c.periodStyle = c.periodStyle || {};
-  c.headerStyle = c.headerStyle || {color:'', textColor:''};
+  c.periodTimeStyle = c.periodTimeStyle || {};
+  // migrate legacy flat headerStyle ({color,textColor}) into per-column structure
+  const defaultHeaderStyle = ()=>({
+    period:{color:'',textColor:''}, time:{color:'',textColor:''},
+    day0:{color:'',textColor:''}, day1:{color:'',textColor:''}, day2:{color:'',textColor:''},
+    day3:{color:'',textColor:''}, day4:{color:'',textColor:''}
+  });
+  if(!c.headerStyle || 'color' in c.headerStyle){
+    // legacy flat object (or missing) — carry over its color to every column if present
+    const legacy = c.headerStyle;
+    c.headerStyle = defaultHeaderStyle();
+    if(legacy && (legacy.color || legacy.textColor)){
+      Object.keys(c.headerStyle).forEach(k=>{
+        c.headerStyle[k] = { color: legacy.color||'', textColor: legacy.textColor||'' };
+      });
+    }
+  }
   (c.breaksA||[]).forEach(b=>{
     if(b.color === undefined) b.color = '';
     if(b.textColor === undefined) b.textColor = '';
@@ -936,13 +961,21 @@ function periodRowHTML(card, n){
       <div class="course richtext" contenteditable="true" data-placeholder="課程" style="font-weight:${weight}" data-role="course" data-card="${card.id}" data-period="${n}" data-day="${d}">${cell.course||''}</div>
     </div>`;
   }
+  const ptStyle = card.periodTimeStyle[n] || {};
+  const ptBg = ptStyle.color || '';
+  const ptText = ptStyle.textColor || '';
+  const numKey = `pnum:${card.id}:${n}`;
+  const timeKey = `ptime:${card.id}:${n}`;
+  const numSelected = multiSelected.has(numKey);
+  const timeSelected = multiSelected.has(timeKey);
   return `
-  <div class="cell-num" style="${pBg?`background:${pBg};`:''} ${pText?`color:${pText};`:''}">
+  <div class="cell-num ${multiSelectMode?'multiselectable':''} ${numSelected?'multi-selected':''}" data-cellkey="${numKey}" style="${pBg?`background:${pBg};`:''} ${pText?`color:${pText};`:''}">
     <span class="color-dot period-dot" style="background:${pBg||'#DADAE2'}" data-role="periodstyle" data-card="${card.id}" data-period="${n}"></span>
     <input type="text" value="${escapeAttr(num)}" size="${Math.max(1,String(num||'').length)}" style="font-weight:${pWeight}; ${pText?`color:${pText};`:''}" data-role="periodnum" data-card="${card.id}" data-period="${n}">
   </div>
-  <div class="cell-time" style="${pBg?`background:${pBg};`:''} ${pText?`color:${pText};`:''}">
-    <input type="text" value="${escapeAttr(time)}" size="${Math.max(4,String(time||'').length)}" style="${pText?`color:${pText};`:''}" data-role="periodtime" data-card="${card.id}" data-period="${n}">
+  <div class="cell-time ${multiSelectMode?'multiselectable':''} ${timeSelected?'multi-selected':''}" data-cellkey="${timeKey}" style="${ptBg?`background:${ptBg};`:''} ${ptText?`color:${ptText};`:''}">
+    <span class="color-dot period-dot" style="background:${ptBg||'#DADAE2'}" data-role="periodtimestyle" data-card="${card.id}" data-period="${n}"></span>
+    <input type="text" value="${escapeAttr(time)}" size="${Math.max(4,String(time||'').length)}" style="${ptText?`color:${ptText};`:''}" data-role="periodtime" data-card="${card.id}" data-period="${n}">
   </div>
   ${daysHTML}`;
 }
@@ -992,13 +1025,18 @@ function dayNoteSection(cardId, key, icon, label, placeholder){
 
 function linksSection(card){
   const links = card.notes.links || [];
+  const normalizeUrl = (u)=>{
+    u = (u||'').trim();
+    if(u && !/^https?:\/\//i.test(u)) u = 'https://' + u;
+    return u;
+  };
   const rows = links.map((l,i)=>`
     <div class="list-item">
       <input type="text" class="link-title" placeholder="標題" value="${escapeAttr(l.title)}" data-role="link-title" data-card="${card.id}" data-idx="${i}">
       <input type="text" class="link-url" placeholder="https://..." value="${escapeAttr(l.url)}" data-role="link-url" data-card="${card.id}" data-idx="${i}">
       <button class="rm" data-role="link-rm" data-card="${card.id}" data-idx="${i}">✕</button>
     </div>`).join('');
-  const linkList = links.filter(l=>l.url).map(l=>`<div class="link-row">🔗 <a href="${escapeAttr(l.url)}" target="_blank" rel="noopener">${escapeHTML(l.title||l.url)}</a></div>`).join('');
+  const linkList = links.filter(l=>l.url).map(l=>`<div class="link-row">🔗 <a href="${escapeAttr(normalizeUrl(l.url))}" target="_blank" rel="noopener">${escapeHTML(l.title||l.url)}</a></div>`).join('');
   const dkey = `${card.id}-links`;
   return `
   <details class="note" data-detailskey="${dkey}"${detailsOpenAttr(dkey)}>
@@ -1032,16 +1070,21 @@ function todosSection(card){
 
 function cardHTML(card){
   let gridRows = '';
-  const hs = card.headerStyle || {};
-  const hBg = hs.color || '';
-  const hText = hs.textColor || '';
-  const hStyleAttr = `${hBg?`background:${hBg};`:''} ${hText?`color:${hText};`:''}`;
-  gridRows += `<div class="hcell" style="${hStyleAttr}">
-    <span class="color-dot header-dot" style="background:${hBg||'#FF9EC0'}" data-role="headerstyle" data-card="${card.id}"></span>
-    <input type="text" value="${escapeAttr(card.colLabels.period)}" size="${Math.max(2,card.colLabels.period.length)}" style="${hText?`color:${hText};`:''}" data-role="collabel" data-card="${card.id}" data-key="period"></div>`;
-  gridRows += `<div class="hcell" style="${hStyleAttr}"><input type="text" value="${escapeAttr(card.colLabels.time)}" size="${Math.max(3,card.colLabels.time.length)}" style="${hText?`color:${hText};`:''}" data-role="collabel" data-card="${card.id}" data-key="time"></div>`;
+  const hcellHTML = (colKey, val, size)=>{
+    const hs = card.headerStyle[colKey] || {};
+    const hBg = hs.color || '';
+    const hText = hs.textColor || '';
+    const styleAttr = `${hBg?`background:${hBg};`:''} ${hText?`color:${hText};`:''}`;
+    const sizeAttr = size ? ` size="${size}"` : '';
+    return `<div class="hcell" style="${styleAttr}">
+      <span class="color-dot header-dot" style="background:${hBg||'#FF9EC0'}" data-role="headerstyle" data-card="${card.id}" data-colkey="${colKey}"></span>
+      <input type="text" value="${escapeAttr(val)}"${sizeAttr} style="${hText?`color:${hText};`:''}" data-role="${colKey==='period'||colKey==='time' ? 'collabel' : 'daylabel'}" data-card="${card.id}" data-key="${colKey==='period'||colKey==='time' ? colKey : ''}" data-day="${colKey.startsWith('day') ? colKey.slice(3) : ''}">
+    </div>`;
+  };
+  gridRows += hcellHTML('period', card.colLabels.period, Math.max(2,card.colLabels.period.length));
+  gridRows += hcellHTML('time', card.colLabels.time, Math.max(3,card.colLabels.time.length));
   card.days.forEach((day,d)=>{
-    gridRows += `<div class="hcell" style="${hStyleAttr}"><input type="text" value="${escapeAttr(day)}" style="${hText?`color:${hText};`:''}" data-role="daylabel" data-card="${card.id}" data-day="${d}"></div>`;
+    gridRows += hcellHTML('day'+d, day);
   });
 
   [1,2,3,4].forEach(n=>{ gridRows += periodRowHTML(card, n); });
@@ -1179,9 +1222,25 @@ function buildMultiselectSwatches(){
     sw.addEventListener('click', ()=>{
       if(multiSelected.size === 0) return;
       multiSelected.forEach(key=>{
-        const [cardId, n, d] = key.split('|');
-        const card = getCard(cardId);
-        if(card && card.cells[n] && card.cells[n][d]) card.cells[n][d].color = c;
+        if(key.startsWith('pnum:')){
+          const [, cardId, n] = key.split(':');
+          const card = getCard(cardId);
+          if(card){
+            if(!card.periodStyle[n]) card.periodStyle[n] = {color:'', textColor:'', bold:false};
+            card.periodStyle[n].color = c;
+          }
+        }else if(key.startsWith('ptime:')){
+          const [, cardId, n] = key.split(':');
+          const card = getCard(cardId);
+          if(card){
+            if(!card.periodTimeStyle[n]) card.periodTimeStyle[n] = {color:'', textColor:''};
+            card.periodTimeStyle[n].color = c;
+          }
+        }else{
+          const [cardId, n, d] = key.split('|');
+          const card = getCard(cardId);
+          if(card && card.cells[n] && card.cells[n][d]) card.cells[n][d].color = c;
+        }
       });
       render(); saveState();
       showToast(`🎨 已套用到 ${multiSelected.size} 格`);
@@ -1237,10 +1296,13 @@ document.getElementById('cardsWrap').addEventListener('input', (e)=>{
 document.getElementById('cardsWrap').addEventListener('click', (e)=>{
   if(multiSelectMode){
     const cellEl = e.target.closest('.period-cell');
-    if(cellEl){
+    const numEl = e.target.closest('.cell-num');
+    const timeEl = e.target.closest('.cell-time');
+    const targetEl = cellEl || numEl || timeEl;
+    if(targetEl){
       e.preventDefault();
       e.stopPropagation();
-      const key = cellEl.dataset.cellkey;
+      const key = targetEl.dataset.cellkey;
       if(multiSelected.has(key)) multiSelected.delete(key); else multiSelected.add(key);
       updateMultiselectCount();
       render();
@@ -1260,7 +1322,8 @@ document.getElementById('cardsWrap').addEventListener('click', (e)=>{
   }
   if(role === 'cellstyle'){ e.stopPropagation(); openCellStylePopover(t, cardId, t.dataset.period, t.dataset.day); return; }
   if(role === 'periodstyle'){ e.stopPropagation(); openPeriodStylePopover(t, cardId, t.dataset.period); return; }
-  if(role === 'headerstyle'){ e.stopPropagation(); openHeaderStylePopover(t, cardId); return; }
+  if(role === 'headerstyle'){ e.stopPropagation(); openHeaderStylePopover(t, cardId, t.dataset.colkey); return; }
+  if(role === 'periodtimestyle'){ e.stopPropagation(); openPeriodTimeStylePopover(t, cardId, t.dataset.period); return; }
   if(role === 'breakstyle'){ e.stopPropagation(); openBreakStylePopover(t, cardId, t.dataset.group, t.dataset.idx); return; }
   if(role === 'link-add'){ card.notes.links.push({title:'', url:''}); render(); saveState(); return; }
   if(role === 'link-rm'){ card.notes.links.splice(Number(t.dataset.idx),1); render(); saveState(); return; }
@@ -1290,7 +1353,12 @@ document.getElementById('cardsWrap').addEventListener('change', (e)=>{
   if(role === 'notefield'){ card.notes[t.dataset.key] = t.value; saveState(); return; }
   if(role === 'daynotefield'){ card.notes[t.dataset.key][d] = t.value; saveState(); return; }
   if(role === 'link-title'){ card.notes.links[idx].title = t.value; saveState(); return; }
-  if(role === 'link-url'){ card.notes.links[idx].url = t.value; render(); saveState(); return; }
+  if(role === 'link-url'){
+    let url = t.value.trim();
+    if(url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
+    card.notes.links[idx].url = url;
+    render(); saveState(); return;
+  }
   if(role === 'todo-text'){ card.notes.todos[idx].text = t.value; saveState(); return; }
   if(role === 'todo-check'){ card.notes.todos[idx].done = t.checked; render(); saveState(); return; }
 });
@@ -1388,11 +1456,9 @@ function openCellStylePopover(anchor, cardId, periodN, dayIdx){
   setTimeout(()=>document.addEventListener('click', closeOnce), 10);
 }
 
-function openPeriodStylePopover(anchor, cardId, periodN){
+function openGenericStylePopover(anchor, styleObj, opts){
+  opts = opts || {};
   document.querySelectorAll('.style-pop').forEach(p=>p.remove());
-  const card = getCard(cardId);
-  if(!card.periodStyle[periodN]) card.periodStyle[periodN] = {color:'', textColor:'', bold:false};
-  const st = card.periodStyle[periodN];
 
   const pop = document.createElement('div');
   pop.className = 'style-pop show';
@@ -1406,10 +1472,10 @@ function openPeriodStylePopover(anchor, cardId, periodN){
   bgGrid.className = 'swatch-grid';
   PALETTE.forEach(c=>{
     const sw = document.createElement('span');
-    sw.className = 'swatch' + (c===st.color ? ' active' : '');
+    sw.className = 'swatch' + (c===styleObj.color ? ' active' : '');
     sw.style.background = c;
     sw.addEventListener('click', ()=>{
-      st.color = c;
+      styleObj.color = c;
       render(); saveState();
     });
     bgGrid.appendChild(sw);
@@ -1425,31 +1491,33 @@ function openPeriodStylePopover(anchor, cardId, periodN){
   textGrid.className = 'swatch-grid';
   TEXT_COLORS.forEach(c=>{
     const sw = document.createElement('span');
-    sw.className = 'swatch' + (c===st.textColor ? ' active' : '');
+    sw.className = 'swatch' + (c===styleObj.textColor ? ' active' : '');
     sw.style.background = c;
     if(c === '#FFFFFF') sw.style.border = '2px solid #ddd';
     sw.addEventListener('click', ()=>{
-      st.textColor = c;
+      styleObj.textColor = c;
       render(); saveState();
     });
     textGrid.appendChild(sw);
   });
   pop.appendChild(textGrid);
 
-  const boldRow = document.createElement('label');
-  boldRow.className = 'bold-toggle-row';
-  boldRow.innerHTML = `<input type="checkbox" ${st.bold ? 'checked' : ''}><span>粗體</span>`;
-  boldRow.querySelector('input').addEventListener('change', (e)=>{
-    st.bold = e.target.checked;
-    render(); saveState();
-  });
-  pop.appendChild(boldRow);
+  if(opts.showBold){
+    const boldRow = document.createElement('label');
+    boldRow.className = 'bold-toggle-row';
+    boldRow.innerHTML = `<input type="checkbox" ${styleObj.bold ? 'checked' : ''}><span>粗體</span>`;
+    boldRow.querySelector('input').addEventListener('change', (e)=>{
+      styleObj.bold = e.target.checked;
+      render(); saveState();
+    });
+    pop.appendChild(boldRow);
+  }
 
   const clearRow = document.createElement('button');
   clearRow.className = 'pop-close';
   clearRow.textContent = '清除自訂顏色';
   clearRow.addEventListener('click', ()=>{
-    card.periodStyle[periodN] = {color:'', textColor:'', bold:false};
+    styleObj.color = ''; styleObj.textColor = ''; if('bold' in styleObj) styleObj.bold = false;
     pop.remove();
     render(); saveState();
   });
@@ -1467,142 +1535,28 @@ function openPeriodStylePopover(anchor, cardId, periodN){
   setTimeout(()=>document.addEventListener('click', closeOnce), 10);
 }
 
-function openHeaderStylePopover(anchor, cardId){
-  document.querySelectorAll('.style-pop').forEach(p=>p.remove());
+function openPeriodStylePopover(anchor, cardId, periodN){
   const card = getCard(cardId);
-  const hs = card.headerStyle;
+  if(!card.periodStyle[periodN]) card.periodStyle[periodN] = {color:'', textColor:'', bold:false};
+  openGenericStylePopover(anchor, card.periodStyle[periodN], {showBold:true});
+}
 
-  const pop = document.createElement('div');
-  pop.className = 'style-pop show';
+function openPeriodTimeStylePopover(anchor, cardId, periodN){
+  const card = getCard(cardId);
+  if(!card.periodTimeStyle[periodN]) card.periodTimeStyle[periodN] = {color:'', textColor:''};
+  openGenericStylePopover(anchor, card.periodTimeStyle[periodN], {});
+}
 
-  const bgLabel = document.createElement('div');
-  bgLabel.className = 'style-pop-label';
-  bgLabel.textContent = '背景顏色';
-  pop.appendChild(bgLabel);
-
-  const bgGrid = document.createElement('div');
-  bgGrid.className = 'swatch-grid';
-  PALETTE.forEach(c=>{
-    const sw = document.createElement('span');
-    sw.className = 'swatch' + (c===hs.color ? ' active' : '');
-    sw.style.background = c;
-    sw.addEventListener('click', ()=>{
-      hs.color = c;
-      render(); saveState();
-    });
-    bgGrid.appendChild(sw);
-  });
-  pop.appendChild(bgGrid);
-
-  const textLabel = document.createElement('div');
-  textLabel.className = 'style-pop-label';
-  textLabel.textContent = '文字顏色';
-  pop.appendChild(textLabel);
-
-  const textGrid = document.createElement('div');
-  textGrid.className = 'swatch-grid';
-  TEXT_COLORS.forEach(c=>{
-    const sw = document.createElement('span');
-    sw.className = 'swatch' + (c===hs.textColor ? ' active' : '');
-    sw.style.background = c;
-    if(c === '#FFFFFF') sw.style.border = '2px solid #ddd';
-    sw.addEventListener('click', ()=>{
-      hs.textColor = c;
-      render(); saveState();
-    });
-    textGrid.appendChild(sw);
-  });
-  pop.appendChild(textGrid);
-
-  const clearRow = document.createElement('button');
-  clearRow.className = 'pop-close';
-  clearRow.textContent = '清除自訂顏色';
-  clearRow.addEventListener('click', ()=>{
-    card.headerStyle = {color:'', textColor:''};
-    pop.remove();
-    render(); saveState();
-  });
-  pop.appendChild(clearRow);
-
-  document.body.appendChild(pop);
-  positionPopover(pop, anchor);
-
-  const closeOnce = (ev)=>{
-    if(!pop.contains(ev.target) && ev.target !== anchor){
-      pop.remove();
-      document.removeEventListener('click', closeOnce);
-    }
-  };
-  setTimeout(()=>document.addEventListener('click', closeOnce), 10);
+function openHeaderStylePopover(anchor, cardId, colKey){
+  const card = getCard(cardId);
+  if(!card.headerStyle[colKey]) card.headerStyle[colKey] = {color:'', textColor:''};
+  openGenericStylePopover(anchor, card.headerStyle[colKey], {});
 }
 
 function openBreakStylePopover(anchor, cardId, group, idx){
-  document.querySelectorAll('.style-pop').forEach(p=>p.remove());
   const card = getCard(cardId);
   const b = card[group][idx];
-
-  const pop = document.createElement('div');
-  pop.className = 'style-pop show';
-
-  const bgLabel = document.createElement('div');
-  bgLabel.className = 'style-pop-label';
-  bgLabel.textContent = '背景顏色';
-  pop.appendChild(bgLabel);
-
-  const bgGrid = document.createElement('div');
-  bgGrid.className = 'swatch-grid';
-  PALETTE.forEach(c=>{
-    const sw = document.createElement('span');
-    sw.className = 'swatch' + (c===b.color ? ' active' : '');
-    sw.style.background = c;
-    sw.addEventListener('click', ()=>{
-      b.color = c;
-      render(); saveState();
-    });
-    bgGrid.appendChild(sw);
-  });
-  pop.appendChild(bgGrid);
-
-  const textLabel = document.createElement('div');
-  textLabel.className = 'style-pop-label';
-  textLabel.textContent = '文字顏色';
-  pop.appendChild(textLabel);
-
-  const textGrid = document.createElement('div');
-  textGrid.className = 'swatch-grid';
-  TEXT_COLORS.forEach(c=>{
-    const sw = document.createElement('span');
-    sw.className = 'swatch' + (c===b.textColor ? ' active' : '');
-    sw.style.background = c;
-    if(c === '#FFFFFF') sw.style.border = '2px solid #ddd';
-    sw.addEventListener('click', ()=>{
-      b.textColor = c;
-      render(); saveState();
-    });
-    textGrid.appendChild(sw);
-  });
-  pop.appendChild(textGrid);
-
-  const clearRow = document.createElement('button');
-  clearRow.className = 'pop-close';
-  clearRow.textContent = '清除自訂顏色';
-  clearRow.addEventListener('click', ()=>{
-    b.color = ''; b.textColor = '';
-    pop.remove();
-    render(); saveState();
-  });
-  pop.appendChild(clearRow);
-
-  document.body.appendChild(pop);
-  positionPopover(pop, anchor);
-
-  const closeOnce = (ev)=>{
-    if(!pop.contains(ev.target) && ev.target !== anchor){
-      pop.remove();
-      document.removeEventListener('click', closeOnce);
-    }
-  };
-  setTimeout(()=>document.addEventListener('click', closeOnce), 10);
+  openGenericStylePopover(anchor, b, {});
 }
 
 /* ---------- Selection-based partial color / bold toolbar ---------- */
