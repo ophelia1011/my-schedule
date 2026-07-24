@@ -99,6 +99,9 @@
   .cell-num.multiselectable, .cell-time.multiselectable{ cursor:pointer; }
   .cell-num.multiselectable input, .cell-time.multiselectable input,
   .cell-num.multiselectable .color-dot, .cell-time.multiselectable .color-dot{ pointer-events:none; }
+  .hcell.multi-selected{ outline:3px solid var(--pink-deep); outline-offset:-3px; }
+  .hcell.multiselectable{ cursor:pointer; }
+  .hcell.multiselectable input, .hcell.multiselectable .color-dot{ pointer-events:none; }
 
   .multiselect-bar{
     position:fixed; left:12px; right:12px; bottom:20px; z-index:85;
@@ -114,6 +117,10 @@
     -webkit-overflow-scrolling:touch;
   }
   .multiselect-bar .ms-scroll .swatch{ flex:none; }
+  .multiselect-bar .ms-row-label{
+    flex:none; font-size:11px; color:var(--ink-soft); font-weight:700;
+    display:flex; align-items:center; padding-right:4px; min-width:26px;
+  }
   .multiselect-bar .msclose{
     border:none; border-radius:10px; padding:6px 12px; font-size:12.5px;
     background:var(--gray-light); color:var(--ink); cursor:pointer; font-family:'Fredoka',sans-serif;
@@ -218,8 +225,10 @@
   .cell-num,.cell-time{
     position:relative;
     display:flex; align-items:center; justify-content:center;
-    background:var(--gray-light); border-radius:10px; padding:4px 2px 4px 7px;
+    background:var(--gray-light); border-radius:10px;
   }
+  .cell-num{ padding:4px 2px 4px 6px; }
+  .cell-time{ padding:4px 2px 4px 7px; }
   .color-dot.period-dot{ position:absolute; top:2px; left:2px; width:7px; height:7px; }
   .color-dot.break-dot{width:9px; height:9px;}
   .cell-num input, .cell-time input{
@@ -544,6 +553,7 @@
     <button class="msclose" id="multiselectDone">完成</button>
   </div>
   <div class="ms-scroll" id="multiselectSwatches"></div>
+  <div class="ms-scroll" id="multiselectTextSwatches"></div>
 </div>
 
 </div>
@@ -1093,7 +1103,9 @@ function cardHTML(card){
     const hText = hs.textColor || '';
     const styleAttr = `${hBg?`background:${hBg};`:''} ${hText?`color:${hText};`:''}`;
     const sizeAttr = size ? ` size="${size}"` : '';
-    return `<div class="hcell" style="${styleAttr}">
+    const hkey = `header:${card.id}:${colKey}`;
+    const hSelected = multiSelected.has(hkey);
+    return `<div class="hcell ${multiSelectMode?'multiselectable':''} ${hSelected?'multi-selected':''}" data-cellkey="${hkey}" style="${styleAttr}">
       <span class="color-dot header-dot" style="background:${hBg||'#FF9EC0'}" data-role="headerstyle" data-card="${card.id}" data-colkey="${colKey}"></span>
       <input type="text" value="${escapeAttr(val)}"${sizeAttr} style="${hText?`color:${hText};`:''}" data-role="${colKey==='period'||colKey==='time' ? 'collabel' : 'daylabel'}" data-card="${card.id}" data-key="${colKey==='period'||colKey==='time' ? colKey : ''}" data-day="${colKey.startsWith('day') ? colKey.slice(3) : ''}">
     </div>`;
@@ -1229,43 +1241,77 @@ const multiSelectBtn = document.getElementById('multiSelectBtn');
 const multiselectBar = document.getElementById('multiselectBar');
 const multiselectCount = document.getElementById('multiselectCount');
 const multiselectSwatchesEl = document.getElementById('multiselectSwatches');
+const multiselectTextSwatchesEl = document.getElementById('multiselectTextSwatches');
+
+function getMultiSelectStyleObj(key){
+  if(key.startsWith('pnum:')){
+    const [, cardId, n] = key.split(':');
+    const card = getCard(cardId);
+    if(!card) return null;
+    if(!card.periodStyle[n]) card.periodStyle[n] = {color:'', textColor:'', bold:false};
+    return card.periodStyle[n];
+  }
+  if(key.startsWith('ptime:')){
+    const [, cardId, n] = key.split(':');
+    const card = getCard(cardId);
+    if(!card) return null;
+    if(!card.periodTimeStyle[n]) card.periodTimeStyle[n] = {color:'', textColor:''};
+    return card.periodTimeStyle[n];
+  }
+  if(key.startsWith('header:')){
+    const [, cardId, colKey] = key.split(':');
+    const card = getCard(cardId);
+    if(!card) return null;
+    if(!card.headerStyle[colKey]) card.headerStyle[colKey] = {color:'', textColor:''};
+    return card.headerStyle[colKey];
+  }
+  const [cardId, n, d] = key.split('|');
+  const card = getCard(cardId);
+  if(!card || !card.cells[n] || !card.cells[n][d]) return null;
+  return card.cells[n][d];
+}
+
+function applyFieldToMultiSelected(field, value){
+  if(multiSelected.size === 0) return;
+  multiSelected.forEach(key=>{
+    const obj = getMultiSelectStyleObj(key);
+    if(obj) obj[field] = value;
+  });
+  render(); saveState();
+  showToast(`🎨 已套用到 ${multiSelected.size} 格`);
+}
 
 function buildMultiselectSwatches(){
   multiselectSwatchesEl.innerHTML = '';
+  const bgLabel = document.createElement('span');
+  bgLabel.className = 'ms-row-label';
+  bgLabel.textContent = '背景';
+  multiselectSwatchesEl.appendChild(bgLabel);
   PALETTE.forEach(c=>{
     const sw = document.createElement('span');
     sw.className = 'swatch';
     sw.style.background = c;
-    sw.addEventListener('click', ()=>{
-      if(multiSelected.size === 0) return;
-      multiSelected.forEach(key=>{
-        if(key.startsWith('pnum:')){
-          const [, cardId, n] = key.split(':');
-          const card = getCard(cardId);
-          if(card){
-            if(!card.periodStyle[n]) card.periodStyle[n] = {color:'', textColor:'', bold:false};
-            card.periodStyle[n].color = c;
-          }
-        }else if(key.startsWith('ptime:')){
-          const [, cardId, n] = key.split(':');
-          const card = getCard(cardId);
-          if(card){
-            if(!card.periodTimeStyle[n]) card.periodTimeStyle[n] = {color:'', textColor:''};
-            card.periodTimeStyle[n].color = c;
-          }
-        }else{
-          const [cardId, n, d] = key.split('|');
-          const card = getCard(cardId);
-          if(card && card.cells[n] && card.cells[n][d]) card.cells[n][d].color = c;
-        }
-      });
-      render(); saveState();
-      showToast(`🎨 已套用到 ${multiSelected.size} 格`);
-    });
+    sw.addEventListener('click', ()=> applyFieldToMultiSelected('color', c));
     multiselectSwatchesEl.appendChild(sw);
   });
 }
+function buildMultiselectTextSwatches(){
+  multiselectTextSwatchesEl.innerHTML = '';
+  const textLabel = document.createElement('span');
+  textLabel.className = 'ms-row-label';
+  textLabel.textContent = '文字';
+  multiselectTextSwatchesEl.appendChild(textLabel);
+  TEXT_COLORS.forEach(c=>{
+    const sw = document.createElement('span');
+    sw.className = 'swatch';
+    sw.style.background = c;
+    if(c === '#FFFFFF') sw.style.border = '2px solid #ddd';
+    sw.addEventListener('click', ()=> applyFieldToMultiSelected('textColor', c));
+    multiselectTextSwatchesEl.appendChild(sw);
+  });
+}
 buildMultiselectSwatches();
+buildMultiselectTextSwatches();
 
 function setMultiSelectMode(on){
   multiSelectMode = on;
@@ -1315,7 +1361,8 @@ document.getElementById('cardsWrap').addEventListener('click', (e)=>{
     const cellEl = e.target.closest('.period-cell');
     const numEl = e.target.closest('.cell-num');
     const timeEl = e.target.closest('.cell-time');
-    const targetEl = cellEl || numEl || timeEl;
+    const hEl = e.target.closest('.hcell');
+    const targetEl = cellEl || numEl || timeEl || hEl;
     if(targetEl){
       e.preventDefault();
       e.stopPropagation();
