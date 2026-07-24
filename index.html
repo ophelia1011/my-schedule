@@ -556,7 +556,11 @@ const PALETTE = [
   '#D9A6A0','#E0C6D6','#D8B4C0','#E8B8C4','#E6D6A8','#EEDFB8','#C9A66B',
   '#DDC9A3','#9FB8B0','#B8C9D9','#A8B8C4','#8FA8C4','#7B93B8','#6B85AA',
   // 加量的紫色／粉色系
-  '#C9A8D6','#B896C9','#A88BC4','#E8A8C9','#F0B8D4','#D9A8C4'
+  '#C9A8D6','#B896C9','#A88BC4','#E8A8C9','#F0B8D4','#D9A8C4',
+  // 淺莫蘭迪藍
+  '#C3D4E0','#AEC6D6','#9DB8CC','#D6E2E8',
+  // 乾燥玫瑰粉
+  '#D9B0A8','#E0BEB4','#CBA0A0','#DCACAF'
 ];
 const TEXT_COLORS = [
   '#4A4258','#2E2E38','#5C6670','#5B7C99','#5B7FB5','#4F7089','#7A8F6E',
@@ -938,6 +942,18 @@ function removeCard(id){
 function escapeAttr(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 function escapeHTML(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+// The HTML `size` attribute estimates width using a narrow reference character (like "0"),
+// which badly under-estimates the width of full-width CJK characters. This weights CJK
+// characters ~2x so inputs actually fit Chinese labels instead of clipping them.
+function inputSize(str){
+  str = String(str||'');
+  let w = 0;
+  for(const ch of str){
+    w += /[\u3000-\u9fff\uff00-\uffef]/.test(ch) ? 2.1 : 1.15;
+  }
+  return Math.max(1, Math.ceil(w));
+}
+
 function periodRowHTML(card, n){
   const time = card.periodTimes[n];
   const num = card.periodNums[n];
@@ -971,11 +987,11 @@ function periodRowHTML(card, n){
   return `
   <div class="cell-num ${multiSelectMode?'multiselectable':''} ${numSelected?'multi-selected':''}" data-cellkey="${numKey}" style="${pBg?`background:${pBg};`:''} ${pText?`color:${pText};`:''}">
     <span class="color-dot period-dot" style="background:${pBg||'#DADAE2'}" data-role="periodstyle" data-card="${card.id}" data-period="${n}"></span>
-    <input type="text" value="${escapeAttr(num)}" size="${Math.max(1,String(num||'').length)}" style="font-weight:${pWeight}; ${pText?`color:${pText};`:''}" data-role="periodnum" data-card="${card.id}" data-period="${n}">
+    <input type="text" value="${escapeAttr(num)}" size="${inputSize(num)}" style="font-weight:${pWeight}; ${pText?`color:${pText};`:''}" data-role="periodnum" data-card="${card.id}" data-period="${n}">
   </div>
   <div class="cell-time ${multiSelectMode?'multiselectable':''} ${timeSelected?'multi-selected':''}" data-cellkey="${timeKey}" style="${ptBg?`background:${ptBg};`:''} ${ptText?`color:${ptText};`:''}">
     <span class="color-dot period-dot" style="background:${ptBg||'#DADAE2'}" data-role="periodtimestyle" data-card="${card.id}" data-period="${n}"></span>
-    <input type="text" value="${escapeAttr(time)}" size="${Math.max(4,String(time||'').length)}" style="${ptText?`color:${ptText};`:''}" data-role="periodtime" data-card="${card.id}" data-period="${n}">
+    <input type="text" value="${escapeAttr(time)}" size="${inputSize(time)}" style="${ptText?`color:${ptText};`:''}" data-role="periodtime" data-card="${card.id}" data-period="${n}">
   </div>
   ${daysHTML}`;
 }
@@ -1081,10 +1097,10 @@ function cardHTML(card){
       <input type="text" value="${escapeAttr(val)}"${sizeAttr} style="${hText?`color:${hText};`:''}" data-role="${colKey==='period'||colKey==='time' ? 'collabel' : 'daylabel'}" data-card="${card.id}" data-key="${colKey==='period'||colKey==='time' ? colKey : ''}" data-day="${colKey.startsWith('day') ? colKey.slice(3) : ''}">
     </div>`;
   };
-  gridRows += hcellHTML('period', card.colLabels.period, Math.max(2,card.colLabels.period.length));
-  gridRows += hcellHTML('time', card.colLabels.time, Math.max(3,card.colLabels.time.length));
+  gridRows += hcellHTML('period', card.colLabels.period, inputSize(card.colLabels.period));
+  gridRows += hcellHTML('time', card.colLabels.time, inputSize(card.colLabels.time));
   card.days.forEach((day,d)=>{
-    gridRows += hcellHTML('day'+d, day);
+    gridRows += hcellHTML('day'+d, day, inputSize(day));
   });
 
   [1,2,3,4].forEach(n=>{ gridRows += periodRowHTML(card, n); });
