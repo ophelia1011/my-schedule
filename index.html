@@ -204,12 +204,12 @@
   .hcell{
     background:var(--pink-light);
     border-radius:10px;
-    padding:6px 4px 6px 12px;
+    padding:6px 3px 6px 8px;
     text-align:center;
     position:relative;
     display:flex; align-items:center; justify-content:center;
   }
-  .color-dot.header-dot{ position:absolute; top:3px; left:3px; width:8px; height:8px; }
+  .color-dot.header-dot{ position:absolute; top:3px; left:2px; width:7px; height:7px; }
   .hcell input{
     width:auto; text-align:center; border:none; background:transparent;
     font-family:'Fredoka',sans-serif; font-weight:700; font-size:12.5px; color:var(--pink-deep);
@@ -218,9 +218,9 @@
   .cell-num,.cell-time{
     position:relative;
     display:flex; align-items:center; justify-content:center;
-    background:var(--gray-light); border-radius:10px; padding:4px 2px 4px 10px;
+    background:var(--gray-light); border-radius:10px; padding:4px 2px 4px 7px;
   }
-  .color-dot.period-dot{ position:absolute; top:2px; left:2px; width:8px; height:8px; }
+  .color-dot.period-dot{ position:absolute; top:2px; left:2px; width:7px; height:7px; }
   .color-dot.break-dot{width:9px; height:9px;}
   .cell-num input, .cell-time input{
     width:auto; text-align:center; border:none; background:transparent;
@@ -419,15 +419,16 @@
   .day-note-row .richtext[contenteditable]:focus{outline:none; border-color:var(--pink);}
   .day-note-row .richtext[contenteditable]:empty:before{ content:attr(data-placeholder); opacity:0.45; }
 
-  .list-item{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
+  .list-item{display:flex; align-items:center; gap:6px; margin-bottom:6px; flex-wrap:wrap;}
   .list-item input[type=text]{
-    flex:1; border:1.5px solid var(--gray); border-radius:8px;
+    flex:1; min-width:0; border:1.5px solid var(--gray); border-radius:8px;
     padding:7px 9px; font-size:13px; font-family:'Noto Sans TC',sans-serif;
+    box-sizing:border-box;
   }
-  .list-item input[type=text].link-title{flex:0.7;}
-  .list-item input[type=text].link-url{flex:1; color:#1c6fa8;}
+  .list-item input[type=text].link-title{flex:0.6; min-width:64px;}
+  .list-item input[type=text].link-url{flex:1.8; min-width:120px; color:#1c6fa8;}
   .list-item input[type=text]:focus{outline:none; border-color:var(--blue);}
-  .list-item .rm{ background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:16px; padding:2px 6px; }
+  .list-item .rm{ background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:16px; padding:2px 6px; flex:none; }
   .list-item .rm:hover{color:#d64545;}
   .add-row-btn{
     background:var(--blue-light); color:#1c6fa8; border:none;
@@ -949,7 +950,7 @@ function inputSize(str){
   str = String(str||'');
   let w = 0;
   for(const ch of str){
-    w += /[\u3000-\u9fff\uff00-\uffef]/.test(ch) ? 2.1 : 1.15;
+    w += /[\u3000-\u9fff\uff00-\uffef]/.test(ch) ? 1.85 : 1.05;
   }
   return Math.max(1, Math.ceil(w));
 }
