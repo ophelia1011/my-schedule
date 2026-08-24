@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- VERSION: 2026-08-25-v3 (所有課表文字靠左對齊圓點) -->
+<!-- VERSION: 2026-08-25-v4 (所有課表文字真正對齊圓點) -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
@@ -254,7 +254,12 @@
   }
 
   .period-cell .top-row{
-    display:contents;
+    grid-column:1 / -1;
+    grid-row:1;
+    display:grid;
+    grid-template-columns:12px minmax(0,1fr);
+    column-gap:5px;
+    min-width:0;
   }
 
   .color-dot{
@@ -286,33 +291,35 @@
 
   textarea.autogrow:focus{outline:none;}
 
-  /* 第一列：班級名稱避開圓點 */
+  /* 第一列：圓點 + 班級；第二列：從圓點正下方開始 */
   .period-cell textarea.classname{
     grid-column:2;
     grid-row:1;
     width:100%;
     min-width:0;
+    max-width:100%;
     font-size:calc(var(--course-font-size) - 2px);
     opacity:0.85;
     padding:0 !important;
     margin:0 !important;
-    text-align:left;
+    text-align:left !important;
     text-indent:0 !important;
     box-sizing:border-box;
+    overflow:hidden;
   }
 
-  /* 第二列：課程文字「直接從圓點下方」開始 */
   .period-cell textarea.course,
   .period-cell div.course{
-    grid-column:1 / -1;
-    grid-row:2;
+    grid-column:1 / -1 !important;
+    grid-row:2 !important;
     justify-self:stretch;
     align-self:start;
+    display:block;
     width:100% !important;
     min-width:0 !important;
     max-width:100% !important;
     box-sizing:border-box !important;
-    padding:0 0 0 1px !important;
+    padding:0 !important;
     margin:2px 0 0 0 !important;
     font-size:var(--course-font-size);
     font-family:'Fredoka',sans-serif;
@@ -328,14 +335,7 @@
   .period-cell div.richtext[contenteditable]{
     min-height:0;
     height:auto;
-    padding:0 0 0 1px !important;
-    margin:2px 0 0 0 !important;
     border:0 !important;
-    white-space:pre-wrap;
-    word-break:break-word;
-    overflow-wrap:anywhere;
-    overflow:hidden;
-    box-sizing:border-box;
   }
 
   .period-cell div.richtext[contenteditable]:focus{outline:none;}
@@ -1080,6 +1080,8 @@ function escapeHTML(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function normalizeCourseHTML(html){
   const box = document.createElement('div');
   box.innerHTML = html || '';
+
+  // Remove formatting that can create an invisible horizontal offset.
   box.querySelectorAll('*').forEach(el=>{
     el.style.removeProperty('margin');
     el.style.removeProperty('margin-left');
@@ -1092,6 +1094,15 @@ function normalizeCourseHTML(html){
     el.style.removeProperty('left');
     el.style.removeProperty('right');
   });
+
+  // Remove leading spaces / NBSP at the start of every visual line.
+  const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node=>{
+    node.nodeValue = node.nodeValue.replace(/(^|\\n)[\\t \\u00a0]+/g, '$1');
+  });
+
   return box.innerHTML;
 }
 
