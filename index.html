@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- VERSION: 2026-08-25-v7 (課程獨立對齊圓點 / 新增週不複製課程) -->
+<!-- VERSION: 2026-08-25-v9-final-alignment -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
@@ -242,42 +242,46 @@
 
   .period-cell{
     border-radius:12px;
-    padding:4px 4px;
-    display:flex;
-    flex-direction:column;
-    align-items:stretch;
+    padding:4px;
+    display:grid;
+    grid-template-columns:12px minmax(0,1fr);
+    grid-template-rows:auto auto;
+    column-gap:4px;
+    row-gap:1px;
     position:relative;
     min-width:0;
     overflow:hidden;
   }
 
-  /* 第一列：圓點＋班級。班級從圓點右側開始，避免 303 被圓點蓋住 */
   .period-cell .top-row{
-    display:flex;
-    align-items:flex-start;
-    gap:4px;
+    grid-column:1 / 3;
+    grid-row:1;
+    display:grid;
+    grid-template-columns:12px minmax(0,1fr);
+    column-gap:4px;
     width:100%;
     min-width:0;
-    min-height:16px;
+    align-items:start;
   }
 
-  .color-dot{
+  .period-cell .color-dot{
     width:12px;
     height:12px;
     border-radius:50%;
-    flex:0 0 12px;
+    flex:none;
     cursor:pointer;
     border:2px solid rgba(255,255,255,0.9);
     box-shadow:0 0 0 1px rgba(0,0,0,0.08);
     margin-top:2px;
-    display:inline-block;
-    position:static;
+    display:block;
+    box-sizing:border-box;
   }
 
-  textarea.autogrow{
+  .period-cell textarea.autogrow{
     resize:none;
     overflow:hidden;
     border:none;
+    outline:none;
     background:transparent;
     width:100%;
     min-width:0;
@@ -290,71 +294,57 @@
     color:inherit;
     box-sizing:border-box;
   }
-  textarea.autogrow:focus{outline:none;}
 
-  /* 班級：緊貼圓點右側，保留完整 303/304/307，不與圓點重疊 */
   .period-cell textarea.classname{
-    flex:1 1 auto;
-    width:auto !important;
+    grid-column:2;
+    grid-row:1;
+    width:100% !important;
     min-width:0 !important;
-    max-width:none !important;
+    max-width:100% !important;
     font-size:calc(var(--course-font-size) - 2px);
     opacity:0.85;
     padding:0 !important;
     margin:0 !important;
     text-indent:0 !important;
     text-align:left !important;
-    box-sizing:border-box;
-    position:static;
     overflow:hidden;
     white-space:pre-wrap;
     overflow-wrap:anywhere;
+    box-sizing:border-box;
   }
 
-  /* 課程：獨立一列，左邊緣 = 上方圓點左邊緣 */
-  .period-cell textarea.course,
-  .period-cell div.course{
-    display:block;
-    width:calc(100% + 16px) !important;
-    min-width:calc(100% + 16px) !important;
-    max-width:none !important;
+  /* 課程第二列：橫跨整個課格，左邊緣與圓點左邊緣完全相同 */
+  .period-cell > .course{
+    grid-column:1 / 3 !important;
+    grid-row:2 !important;
+    display:block !important;
+    justify-self:stretch !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
     box-sizing:border-box !important;
     font-size:var(--course-font-size);
     font-family:'Fredoka',sans-serif;
     line-height:1.35;
     padding:0 !important;
-    margin:1px 0 0 -16px !important;
+    margin:1px 0 0 0 !important;
     text-indent:0 !important;
     text-align:left !important;
     white-space:pre-wrap;
     overflow-wrap:anywhere;
     word-break:break-word;
     overflow:hidden;
-    align-self:stretch;
-    position:relative;
-    left:0 !important;
   }
 
-  .period-cell div.richtext[contenteditable]{
+  .period-cell > .course.richtext[contenteditable]{
     min-height:15px;
     height:auto;
-    word-break:break-word;
-    white-space:pre-wrap;
-    padding:0 !important;
-    margin:1px 0 0 0 !important;
     border:0 !important;
-    box-sizing:border-box;
+    outline:none !important;
   }
-  .period-cell div.richtext[contenteditable]:focus{outline:none;}
-  .period-cell div.richtext[contenteditable]:empty:before{
-    content:attr(data-placeholder);
-    opacity:0.45;
-  }
-  .period-cell input:focus{outline:none;}
 
-  /* 課程內容中的貼上/粗體等內層元素不能自行帶入左縮排 */
-  .period-cell .course > *,
-  .period-cell .course *{
+  .period-cell > .course > *,
+  .period-cell > .course *{
     margin:0 !important;
     padding:0 !important;
     text-indent:0 !important;
@@ -362,7 +352,8 @@
     position:static !important;
   }
 
-  /* Time / 節次數字限制在自己的格子 */
+  .period-cell input:focus{outline:none;}
+
   .cell-num input,
   .cell-time input{
     min-width:0;
@@ -1075,6 +1066,13 @@ function addCard(){
       });
     });
 
+    // 新增一週：只保留班級、背景色、文字色與班級粗體。
+    // 課程內容一律清空，不複製上一週課程。
+    Object.keys(c.cells).forEach(n=>{
+      Object.keys(c.cells[n]).forEach(d=>{
+        c.cells[n][d].course = '';
+      });
+    });
     if(ref.weekStart){
       const d = new Date(ref.weekStart + 'T00:00:00');
       d.setDate(d.getDate()+7);
@@ -1102,11 +1100,13 @@ function normalizeCourseHTML(html){
   const box=document.createElement('div');
   box.innerHTML=html||'';
   box.querySelectorAll('*').forEach(el=>{
-    el.style.removeProperty('margin-left');
-    el.style.removeProperty('padding-left');
-    el.style.removeProperty('text-indent');
-    el.style.removeProperty('transform');
+    ['margin','margin-left','margin-right','padding','padding-left','padding-right',
+     'text-indent','transform','left','right','position'].forEach(k=>el.style.removeProperty(k));
   });
+  const walker=document.createTreeWalker(box,NodeFilter.SHOW_TEXT);
+  const nodes=[];
+  while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node=>node.nodeValue=node.nodeValue.replace(/^[\t \u00a0]+/,''));
   return box.innerHTML;
 }
 
