@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- VERSION: 2026-08-25-v4 (所有課表文字真正對齊圓點) -->
+<!-- VERSION: 2026-08-25-v5 (圓點基準對齊 / 保留原登入功能) -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
@@ -242,24 +242,23 @@
 
   .period-cell{
     border-radius:12px;
-    padding:6px 7px 6px 7px;
-    display:grid;
-    grid-template-columns:12px minmax(0,1fr);
-    grid-template-rows:auto auto;
-    column-gap:5px;
-    row-gap:2px;
+    padding:4px 4px;
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
     position:relative;
     min-width:0;
     overflow:hidden;
   }
 
+  /* 第一列：圓點＋班級 */
   .period-cell .top-row{
-    grid-column:1 / -1;
-    grid-row:1;
     display:grid;
     grid-template-columns:12px minmax(0,1fr);
-    column-gap:5px;
+    column-gap:4px;
+    width:100%;
     min-width:0;
+    align-items:start;
   }
 
   .color-dot{
@@ -267,7 +266,6 @@
     border:2px solid rgba(255,255,255,0.9);
     box-shadow:0 0 0 1px rgba(0,0,0,0.08);
     margin-top:2px; display:inline-block;
-    grid-column:1; grid-row:1;
   }
 
   textarea.autogrow{
@@ -277,24 +275,22 @@
     background:transparent;
     width:100%;
     min-width:0;
+    max-width:100%;
     font-family:inherit;
     line-height:1.35;
     padding:0 !important;
     margin:0 !important;
     display:block;
     color:inherit;
-    min-height:0;
-    text-align:left;
-    text-indent:0;
     box-sizing:border-box;
   }
 
   textarea.autogrow:focus{outline:none;}
 
-  /* 第一列：圓點 + 班級；第二列：從圓點正下方開始 */
+  /* 班級名稱在圓點右側 */
   .period-cell textarea.classname{
-    grid-column:2;
-    grid-row:1;
+    grid-column:auto;
+    grid-row:auto;
     width:100%;
     min-width:0;
     max-width:100%;
@@ -302,25 +298,21 @@
     opacity:0.85;
     padding:0 !important;
     margin:0 !important;
-    text-align:left !important;
     text-indent:0 !important;
+    text-align:left !important;
     box-sizing:border-box;
-    overflow:hidden;
   }
 
+  /* 第二列：整列從「圓點左邊緣」開始，不再從班級文字開始 */
   .period-cell textarea.course,
   .period-cell div.course{
-    grid-column:1 / -1 !important;
-    grid-row:2 !important;
-    justify-self:stretch;
-    align-self:start;
     display:block;
     width:100% !important;
     min-width:0 !important;
     max-width:100% !important;
     box-sizing:border-box !important;
     padding:0 !important;
-    margin:2px 0 0 0 !important;
+    margin:1px 0 0 0 !important;
     font-size:var(--course-font-size);
     font-family:'Fredoka',sans-serif;
     line-height:1.35;
@@ -330,11 +322,16 @@
     overflow-wrap:anywhere;
     word-break:break-word;
     overflow:hidden;
+    align-self:stretch;
   }
 
   .period-cell div.richtext[contenteditable]{
-    min-height:0;
+    min-height:15px;
     height:auto;
+    word-break:break-word;
+    white-space:pre-wrap;
+    padding:0 !important;
+    margin:1px 0 0 0 !important;
     border:0 !important;
   }
 
@@ -347,15 +344,14 @@
 
   .period-cell input:focus{outline:none;}
 
-  /* Delete 後：內容清空，但維持課表原本正常的格子內距 */
-  .period-cell.is-empty{
-    min-height:0;
-  }
-  .period-cell .course:empty{
-    min-height:0 !important;
-    height:0 !important;
-    padding:0 !important;
-    margin:0 !important;
+  /* Time / 節次欄：永遠限制在自己的格子裡 */
+  .cell-num input,
+  .cell-time input{
+    max-width:100%;
+    min-width:0;
+    box-sizing:border-box;
+    overflow:hidden;
+    text-overflow:clip;
   }
 
   /* ---------- Selection formatting mini toolbar ---------- */
@@ -565,20 +561,6 @@
       z-index:88;
     }
   }
-
-
-  .period-cell .course > *,
-  .period-cell .richtext > *{
-    margin:0 !important;
-    padding:0 !important;
-    text-indent:0 !important;
-    transform:none !important;
-    position:static !important;
-    left:auto !important;
-    right:auto !important;
-    box-sizing:border-box;
-  }
-
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -1080,8 +1062,6 @@ function escapeHTML(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function normalizeCourseHTML(html){
   const box = document.createElement('div');
   box.innerHTML = html || '';
-
-  // Remove formatting that can create an invisible horizontal offset.
   box.querySelectorAll('*').forEach(el=>{
     el.style.removeProperty('margin');
     el.style.removeProperty('margin-left');
@@ -1094,17 +1074,15 @@ function normalizeCourseHTML(html){
     el.style.removeProperty('left');
     el.style.removeProperty('right');
   });
-
-  // Remove leading spaces / NBSP at the start of every visual line.
   const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
   const nodes = [];
   while(walker.nextNode()) nodes.push(walker.currentNode);
   nodes.forEach(node=>{
-    node.nodeValue = node.nodeValue.replace(/(^|\\n)[\\t \\u00a0]+/g, '$1');
+    node.nodeValue = node.nodeValue.replace(/^[\t \u00a0]+/, '');
   });
-
   return box.innerHTML;
 }
+
 
 
 // The HTML `size` attribute estimates width using a narrow reference character (like "0"),
@@ -1134,7 +1112,7 @@ function periodRowHTML(card, n){
     const cellKey = `${card.id}|${n}|${d}`;
     const isSelected = multiSelected.has(cellKey);
     daysHTML += `
-    <div class="period-cell ${(!cell.className && !cell.course) ? 'is-empty' : ''} ${multiSelectMode?'multiselectable':''} ${isSelected?'multi-selected':''}" data-cellkey="${cellKey}" style="background:${cell.color}; color:${cell.textColor||'#4A4258'};">
+    <div class="period-cell ${multiSelectMode?'multiselectable':''} ${isSelected?'multi-selected':''}" data-cellkey="${cellKey}" style="background:${cell.color}; color:${cell.textColor||'#4A4258'};">
       <div class="top-row">
         <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
         <textarea class="classname autogrow" rows="1" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
@@ -1482,7 +1460,7 @@ function updateMultiselectCount(){
 multiSelectBtn.addEventListener('click', ()=> setMultiSelectMode(!multiSelectMode));
 document.getElementById('multiselectDone').addEventListener('click', ()=> setMultiSelectMode(false));
 
-// 在課格內按 Delete：清空該格的「班級＋課程」內容，並立即重新計算高度。
+// 在課格內按 Delete：清空該格的「班級＋課程」內容，不影響其他格。
 document.getElementById('cardsWrap').addEventListener('keydown', (e)=>{
   if(multiSelectMode || e.key !== 'Delete') return;
   const t = e.target;
@@ -1501,24 +1479,11 @@ document.getElementById('cardsWrap').addEventListener('keydown', (e)=>{
   cell.className = '';
   cell.course = '';
 
-  // 清空目前 DOM，然後重新 render，讓 CSS / 自動高度重新計算。
   const classEl = cellEl.querySelector('[data-role="classname"]');
   const courseEl = cellEl.querySelector('[data-role="course"]');
-  if(classEl) classEl.value = '';
+  if(classEl) { classEl.value = ''; autoGrowEl(classEl); }
   if(courseEl) courseEl.innerHTML = '';
-
-  // 重新 render，讓空白格恢復正常高度。
-  const cardId = card.id;
   debouncedSave();
-  render();
-
-  // render 後把游標放回同一格，避免刪除後焦點跳走。
-  requestAnimationFrame(()=>{
-    const selector = `.period-cell[data-cellkey="${cardId}|${period}|${day}"]`;
-    const newCell = document.querySelector(selector);
-    const newCourse = newCell && newCell.querySelector('[data-role="course"]');
-    if(newCourse) newCourse.focus();
-  });
 });
 
 document.getElementById('cardsWrap').addEventListener('paste', (e)=>{
