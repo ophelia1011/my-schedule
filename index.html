@@ -251,25 +251,27 @@
     overflow:hidden;
   }
 
-  /* 第一列：班級文字獨立，從格子最左側開始 */
+  /* 第一列：圓點＋班級。班級從圓點右側開始，避免 303 被圓點蓋住 */
   .period-cell .top-row{
-    position:relative;
-    display:block;
+    display:flex;
+    align-items:flex-start;
+    gap:4px;
     width:100%;
     min-width:0;
     min-height:16px;
   }
 
   .color-dot{
-    width:12px; height:12px; border-radius:50%; flex:none; cursor:pointer;
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    flex:0 0 12px;
+    cursor:pointer;
     border:2px solid rgba(255,255,255,0.9);
     box-shadow:0 0 0 1px rgba(0,0,0,0.08);
     margin-top:2px;
     display:inline-block;
-    position:absolute;
-    left:0;
-    top:0;
-    z-index:2;
+    position:static;
   }
 
   textarea.autogrow{
@@ -290,11 +292,12 @@
   }
   textarea.autogrow:focus{outline:none;}
 
-  /* 班級：與課程內容分開，班級本身貼齊格子最左側 */
+  /* 班級：緊貼圓點右側，保留完整 303/304/307，不與圓點重疊 */
   .period-cell textarea.classname{
-    width:100% !important;
-    max-width:100% !important;
+    flex:1 1 auto;
+    width:auto !important;
     min-width:0 !important;
+    max-width:none !important;
     font-size:calc(var(--course-font-size) - 2px);
     opacity:0.85;
     padding:0 !important;
@@ -302,8 +305,10 @@
     text-indent:0 !important;
     text-align:left !important;
     box-sizing:border-box;
-    position:relative;
-    z-index:1;
+    position:static;
+    overflow:hidden;
+    white-space:pre-wrap;
+    overflow-wrap:anywhere;
   }
 
   /* 課程：獨立一列，左邊緣 = 上方圓點左邊緣 */
@@ -1041,11 +1046,13 @@ function addCard(){
       Object.keys(c.cells[n]).forEach(d=>{
         const refCell = ref.cells && ref.cells[n] && ref.cells[n][d];
         if(refCell){
+          // 新增一週：只複製班級與原本選好的背景／文字顏色。
+          // 課程內容刻意保持空白，不複製上一週的課程文字。
           c.cells[n][d].color = refCell.color;
           c.cells[n][d].textColor = refCell.textColor;
-          c.cells[n][d].bold = refCell.bold;
           c.cells[n][d].className = refCell.className;
           c.cells[n][d].classNameBold = refCell.classNameBold;
+          c.cells[n][d].course = '';
         }
       });
     });
