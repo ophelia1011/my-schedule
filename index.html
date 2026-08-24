@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- VERSION: 2026-08-24-v2 (課程文字對齊圓點 / 班級課程空白皆可清空) -->
+<!-- VERSION: 2026-08-25-v3 (所有課表文字靠左對齊圓點) -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
@@ -219,21 +219,22 @@
   }
   .color-dot.header-dot{ position:absolute; top:3px; left:2px; width:7px; height:7px; }
   .hcell input{
-    width:auto; text-align:center; border:none; background:transparent;
+    width:auto; text-align:left; border:none; background:transparent;
     font-family:'Fredoka',sans-serif; font-weight:700; font-size:12.5px; color:var(--pink-deep);
+    margin-left:7px;
   }
   .hcell input:focus{outline:none;}
   .cell-num,.cell-time{
     position:relative;
-    display:flex; align-items:center; justify-content:center;
+    display:flex; align-items:center; justify-content:flex-start;
     background:var(--gray-light); border-radius:10px;
   }
-  .cell-num{ padding:4px 2px 4px 6px; }
-  .cell-time{ padding:4px 2px 4px 7px; }
+  .cell-num{ padding:4px 2px 4px 11px; }
+  .cell-time{ padding:4px 2px 4px 11px; }
   .color-dot.period-dot{ position:absolute; top:2px; left:2px; width:7px; height:7px; }
   .color-dot.break-dot{width:9px; height:9px;}
   .cell-num input, .cell-time input{
-    width:auto; text-align:center; border:none; background:transparent;
+    width:auto; text-align:left; border:none; background:transparent;
     font-size:var(--period-font-size); font-weight:600; color:var(--ink-soft); font-family:'Fredoka',sans-serif;
   }
   .cell-time input{font-size:calc(var(--period-font-size) - 2px); padding:0;}
@@ -242,7 +243,10 @@
   .period-cell{
     border-radius:12px; padding:6px 7px;
     display:grid; grid-template-columns:12px 1fr; grid-template-rows:auto auto;
-    column-gap:5px; row-gap:2px; position:relative; align-items:start;
+    column-gap:5px; row-gap:2px; position:relative;
+  }
+  .period-cell .top-row{
+    display:contents;
   }
   .color-dot{
     width:12px; height:12px; border-radius:50%; flex:none; cursor:pointer;
@@ -256,14 +260,17 @@
     display:block; color:inherit;
   }
   textarea.autogrow:focus{outline:none;}
+  /* 所有課程文字都從左上角圓點的右側開始，保持同一條左對齊線 */
   .period-cell textarea.classname{
     flex:1; min-width:0; font-size:calc(var(--course-font-size) - 2px); opacity:0.85;
-    grid-column:2; grid-row:1;
+    grid-column:1/-1; grid-row:1;
+    padding:0 0 0 17px !important; margin:0 !important;
+    text-indent:0 !important;
   }
   .period-cell textarea.course, .period-cell div.course{
     font-size:var(--course-font-size); font-family:'Fredoka',sans-serif;
-    padding-left:0 !important; padding:0 !important; margin:2px 0 0 0 !important;
-    text-indent:0 !important;
+    padding:0 0 0 17px !important; margin:2px 0 0 0 !important;
+    text-indent:0 !important; margin-left:0 !important;
     grid-column:1/-1; grid-row:2;
   }
   .period-cell div.richtext[contenteditable]{
@@ -353,7 +360,7 @@
 
   .break-row{
     grid-column: 1 / -1;
-    display:flex; align-items:center; justify-content:center; gap:10px;
+    display:flex; align-items:center; justify-content:flex-start; gap:6px;
     background:var(--pink-light); border-radius:10px; padding:5px 8px;
   }
   .break-row input.blabel{
@@ -525,7 +532,7 @@
   </span>
   <button class="tool-btn multiselect" id="multiSelectBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
-  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-7</span>
+  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-5</span>
 </div>
 
 <div id="stylePopSlot"></div>
@@ -1010,8 +1017,10 @@ function periodRowHTML(card, n){
     const isSelected = multiSelected.has(cellKey);
     daysHTML += `
     <div class="period-cell ${multiSelectMode?'multiselectable':''} ${isSelected?'multi-selected':''}" data-cellkey="${cellKey}" style="background:${cell.color}; color:${cell.textColor||'#4A4258'};">
-      <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
-      <textarea class="classname autogrow" rows="1" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
+      <div class="top-row">
+        <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
+        <textarea class="classname autogrow" rows="1" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
+      </div>
       <div class="course richtext" contenteditable="true" style="font-weight:${weight}" data-role="course" data-card="${card.id}" data-period="${n}" data-day="${d}">${cell.course||''}</div>
     </div>`;
   }
