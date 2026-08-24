@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- VERSION: 2026-08-25-v5 (圓點基準對齊 / 保留原登入功能) -->
+<!-- VERSION: 2026-08-25-v6 (班級左對齊 / 課程對齊圓點 / 保留原登入) -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
@@ -251,21 +251,25 @@
     overflow:hidden;
   }
 
-  /* 第一列：圓點＋班級 */
+  /* 第一列：班級文字獨立，從格子最左側開始 */
   .period-cell .top-row{
-    display:grid;
-    grid-template-columns:12px minmax(0,1fr);
-    column-gap:4px;
+    position:relative;
+    display:block;
     width:100%;
     min-width:0;
-    align-items:start;
+    min-height:16px;
   }
 
   .color-dot{
     width:12px; height:12px; border-radius:50%; flex:none; cursor:pointer;
     border:2px solid rgba(255,255,255,0.9);
     box-shadow:0 0 0 1px rgba(0,0,0,0.08);
-    margin-top:2px; display:inline-block;
+    margin-top:2px;
+    display:inline-block;
+    position:absolute;
+    left:0;
+    top:0;
+    z-index:2;
   }
 
   textarea.autogrow{
@@ -284,16 +288,13 @@
     color:inherit;
     box-sizing:border-box;
   }
-
   textarea.autogrow:focus{outline:none;}
 
-  /* 班級名稱在圓點右側 */
+  /* 班級：與課程內容分開，班級本身貼齊格子最左側 */
   .period-cell textarea.classname{
-    grid-column:auto;
-    grid-row:auto;
-    width:100%;
-    min-width:0;
-    max-width:100%;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
     font-size:calc(var(--course-font-size) - 2px);
     opacity:0.85;
     padding:0 !important;
@@ -301,9 +302,11 @@
     text-indent:0 !important;
     text-align:left !important;
     box-sizing:border-box;
+    position:relative;
+    z-index:1;
   }
 
-  /* 第二列：整列從「圓點左邊緣」開始，不再從班級文字開始 */
+  /* 課程：獨立一列，左邊緣 = 上方圓點左邊緣 */
   .period-cell textarea.course,
   .period-cell div.course{
     display:block;
@@ -311,11 +314,11 @@
     min-width:0 !important;
     max-width:100% !important;
     box-sizing:border-box !important;
-    padding:0 !important;
-    margin:1px 0 0 0 !important;
     font-size:var(--course-font-size);
     font-family:'Fredoka',sans-serif;
     line-height:1.35;
+    padding:0 !important;
+    margin:1px 0 0 0 !important;
     text-indent:0 !important;
     text-align:left !important;
     white-space:pre-wrap;
@@ -333,22 +336,30 @@
     padding:0 !important;
     margin:1px 0 0 0 !important;
     border:0 !important;
+    box-sizing:border-box;
   }
-
   .period-cell div.richtext[contenteditable]:focus{outline:none;}
-
   .period-cell div.richtext[contenteditable]:empty:before{
     content:attr(data-placeholder);
     opacity:0.45;
   }
-
   .period-cell input:focus{outline:none;}
 
-  /* Time / 節次欄：永遠限制在自己的格子裡 */
+  /* 課程內容中的貼上/粗體等內層元素不能自行帶入左縮排 */
+  .period-cell .course > *,
+  .period-cell .course *{
+    margin-left:0 !important;
+    padding-left:0 !important;
+    text-indent:0 !important;
+    transform:none !important;
+    position:static !important;
+  }
+
+  /* Time / 節次數字限制在自己的格子 */
   .cell-num input,
   .cell-time input{
-    max-width:100%;
     min-width:0;
+    max-width:100%;
     box-sizing:border-box;
     overflow:hidden;
     text-overflow:clip;
@@ -1060,29 +1071,16 @@ function removeCard(id){
 function escapeAttr(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 function escapeHTML(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function normalizeCourseHTML(html){
-  const box = document.createElement('div');
-  box.innerHTML = html || '';
+  const box=document.createElement('div');
+  box.innerHTML=html||'';
   box.querySelectorAll('*').forEach(el=>{
-    el.style.removeProperty('margin');
     el.style.removeProperty('margin-left');
-    el.style.removeProperty('margin-right');
-    el.style.removeProperty('padding');
     el.style.removeProperty('padding-left');
-    el.style.removeProperty('padding-right');
     el.style.removeProperty('text-indent');
     el.style.removeProperty('transform');
-    el.style.removeProperty('left');
-    el.style.removeProperty('right');
-  });
-  const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
-  const nodes = [];
-  while(walker.nextNode()) nodes.push(walker.currentNode);
-  nodes.forEach(node=>{
-    node.nodeValue = node.nodeValue.replace(/^[\t \u00a0]+/, '');
   });
   return box.innerHTML;
 }
-
 
 
 // The HTML `size` attribute estimates width using a narrow reference character (like "0"),
@@ -1867,7 +1865,7 @@ function applyToSelection(cmd, val){
   }catch(err){ console.error('format failed', err); }
   const card = getCard(activeCourseEl.dataset.card);
   if(card){
-    card.cells[activeCourseEl.dataset.period][activeCourseEl.dataset.day].course = activeCourseEl.innerHTML;
+    card.cells[activeCourseEl.dataset.period][activeCourseEl.dataset.day].course = normalizeCourseHTML(activeCourseEl.innerHTML);
     debouncedSave();
   }
   // refresh the saved range to match the (possibly now-different) selection
