@@ -931,6 +931,20 @@ function addCard(){
     c.periodTimes = {...ref.periodTimes};
     c.breaksA = ref.breaksA.map(b=>({...b}));
     c.breaksB = ref.breaksB.map(b=>({...b}));
+    c.headerStyle = JSON.parse(JSON.stringify(ref.headerStyle));
+    c.periodStyle = JSON.parse(JSON.stringify(ref.periodStyle));
+    c.periodTimeStyle = JSON.parse(JSON.stringify(ref.periodTimeStyle));
+    Object.keys(c.cells).forEach(n=>{
+      Object.keys(c.cells[n]).forEach(d=>{
+        const refCell = ref.cells && ref.cells[n] && ref.cells[n][d];
+        if(refCell){
+          c.cells[n][d].color = refCell.color;
+          c.cells[n][d].textColor = refCell.textColor;
+          c.cells[n][d].bold = refCell.bold;
+          c.cells[n][d].classNameBold = refCell.classNameBold;
+        }
+      });
+    });
     if(ref.weekStart){
       const d = new Date(ref.weekStart + 'T00:00:00');
       d.setDate(d.getDate()+7);
