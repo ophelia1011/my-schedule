@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- VERSION: 2026-08-25-v6 (班級左對齊 / 課程對齊圓點 / 保留原登入) -->
+<!-- VERSION: 2026-08-25-v7 (課程獨立對齊圓點 / 新增週不複製課程) -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
@@ -315,15 +315,15 @@
   .period-cell textarea.course,
   .period-cell div.course{
     display:block;
-    width:100% !important;
-    min-width:0 !important;
-    max-width:100% !important;
+    width:calc(100% + 16px) !important;
+    min-width:calc(100% + 16px) !important;
+    max-width:none !important;
     box-sizing:border-box !important;
     font-size:var(--course-font-size);
     font-family:'Fredoka',sans-serif;
     line-height:1.35;
     padding:0 !important;
-    margin:1px 0 0 0 !important;
+    margin:1px 0 0 -16px !important;
     text-indent:0 !important;
     text-align:left !important;
     white-space:pre-wrap;
@@ -331,6 +331,8 @@
     word-break:break-word;
     overflow:hidden;
     align-self:stretch;
+    position:relative;
+    left:0 !important;
   }
 
   .period-cell div.richtext[contenteditable]{
@@ -353,8 +355,8 @@
   /* 課程內容中的貼上/粗體等內層元素不能自行帶入左縮排 */
   .period-cell .course > *,
   .period-cell .course *{
-    margin-left:0 !important;
-    padding-left:0 !important;
+    margin:0 !important;
+    padding:0 !important;
     text-indent:0 !important;
     transform:none !important;
     position:static !important;
@@ -1031,7 +1033,9 @@ function latestDatedCard(){
 function addCard(){
   const c = defaultCard();
   const ref = latestDatedCard() || cards[0];
+
   if(ref){
+    // 週表本身的結構／標題／節次／時間／break 保留。
     c.classroomTitle = ref.classroomTitle;
     c.days = ref.days.slice();
     c.colLabels = {...ref.colLabels};
@@ -1042,20 +1046,35 @@ function addCard(){
     c.headerStyle = JSON.parse(JSON.stringify(ref.headerStyle));
     c.periodStyle = JSON.parse(JSON.stringify(ref.periodStyle));
     c.periodTimeStyle = JSON.parse(JSON.stringify(ref.periodTimeStyle));
+
     Object.keys(c.cells).forEach(n=>{
       Object.keys(c.cells[n]).forEach(d=>{
-        const refCell = ref.cells && ref.cells[n] && ref.cells[n][d];
-        if(refCell){
-          // 新增一週：只複製班級與原本選好的背景／文字顏色。
-          // 課程內容刻意保持空白，不複製上一週的課程文字。
-          c.cells[n][d].color = refCell.color;
-          c.cells[n][d].textColor = refCell.textColor;
-          c.cells[n][d].className = refCell.className;
-          c.cells[n][d].classNameBold = refCell.classNameBold;
-          c.cells[n][d].course = '';
-        }
+        const refCell = ref.cells?.[n]?.[d];
+        if(!refCell) return;
+
+        // 只複製：
+        // ① 班級
+        // ② 班級粗體
+        // ③ 格子的背景色
+        // ④ 格子的文字顏色
+        //
+        // 絕對不複製課程內容、課程粗體或其他課程 rich-text。
+        c.cells[n][d].className = refCell.className || '';
+        c.cells[n][d].classNameBold = !!refCell.classNameBold;
+        c.cells[n][d].color = refCell.color || '';
+        c.cells[n][d].textColor = refCell.textColor || '#4A4258';
+        c.cells[n][d].course = '';
+        c.cells[n][d].bold = true;
       });
     });
+
+    // 最後再做一次「全部清空課程」保證，避免任何舊資料／共用參照混入。
+    Object.keys(c.cells).forEach(n=>{
+      Object.keys(c.cells[n]).forEach(d=>{
+        c.cells[n][d].course = '';
+      });
+    });
+
     if(ref.weekStart){
       const d = new Date(ref.weekStart + 'T00:00:00');
       d.setDate(d.getDate()+7);
@@ -1063,9 +1082,11 @@ function addCard(){
       c.weekLabel = weekRangeLabel(c.weekStart);
     }
   }
+
   cards.push(c);
   expandedIds.add(c.id);
-  render(); saveState();
+  render();
+  saveState();
   setTimeout(()=>scrollToCard(c.id), 60);
 }
 
