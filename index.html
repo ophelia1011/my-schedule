@@ -321,15 +321,15 @@
 
   /* ---------- Cell style popover ---------- */
   .style-pop{
-    position:fixed; display:none; flex-direction:column; gap:6px;
-    background:white; padding:10px; border-radius:14px; box-shadow:var(--shadow);
-    z-index:90; width:236px; max-height:70vh; overflow-y:auto;
+    position:fixed; left:12px; right:12px; bottom:20px; display:none; flex-direction:column; gap:8px;
+    background:white; padding:12px; border-radius:16px; box-shadow:var(--shadow);
+    z-index:90; max-height:50vh; overflow-y:auto; border:2px solid var(--pink-light);
   }
   .style-pop.show{display:flex;}
-  .style-pop-label{ font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-top:2px; }
+  .style-pop-label{ font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-top:2px; width:100%; }
   .swatch-grid{ display:flex; flex-wrap:wrap; gap:6px; }
   .swatch{
-    width:22px; height:22px; border-radius:50%; cursor:pointer;
+    width:24px; height:24px; border-radius:50%; cursor:pointer; flex:none;
     border:2px solid rgba(0,0,0,0.06); box-shadow:0 0 0 1px rgba(0,0,0,0.04);
   }
   .swatch.active{ border-color:var(--pink); box-shadow:0 0 0 2px var(--pink); }
@@ -338,33 +338,12 @@
     color:var(--ink); margin-top:4px; cursor:pointer;
   }
   .bold-toggle-row input{ width:16px; height:16px; accent-color:var(--pink); }
-
-  .color-pop{
-    position:fixed; display:none; flex-direction:column; gap:4px;
-    background:white; padding:10px; border-radius:14px; box-shadow:var(--shadow);
-    z-index:90; width:216px; max-height:75vh; overflow-y:auto;
-  }
-  .color-pop.show{display:flex;}
-  .color-pop .pop-label{
-    font-size:11px; font-weight:700; color:var(--ink-soft); margin:4px 0 2px;
-    font-family:'Fredoka',sans-serif;
-  }
-  .swatch-grid{ display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; }
-  .swatch-grid span{
-    width:20px; height:20px; border-radius:50%; cursor:pointer;
-    border:2px solid white; box-shadow:0 0 0 1px rgba(0,0,0,0.1);
-  }
-  .swatch-grid span.selected{ box-shadow:0 0 0 2px var(--ink); }
-  .bold-btn{
-    margin-top:6px; width:100%; padding:7px; border:none; border-radius:8px;
-    background:var(--gray-light); font-weight:700; font-family:'Fredoka',sans-serif;
-    cursor:pointer; font-size:12.5px; color:var(--ink);
-  }
-  .bold-btn.active{ background:var(--pink); color:white; }
   .pop-close{
-    margin-top:6px; width:100%; padding:6px; border:none; border-radius:8px;
-    background:transparent; color:var(--ink-soft); font-size:11.5px; cursor:pointer;
+    margin-top:6px; width:100%; padding:8px; border:none; border-radius:10px;
+    background:var(--gray-light); color:var(--ink); font-size:12.5px; font-weight:700;
+    font-family:'Fredoka',sans-serif; cursor:pointer;
   }
+  body.style-pop-active{ padding-bottom:400px; }
 
   .break-row{
     grid-column: 1 / -1;
@@ -574,7 +553,10 @@ const PALETTE = [
   // 乾燥玫瑰粉
   '#D9B0A8','#E0BEB4','#CBA0A0','#DCACAF'
 ];
-const TEXT_COLORS = [...PALETTE, '#2D2A32', '#FFFFFF'];
+const TEXT_COLORS = [
+  '#4A4258','#2E2E38','#5C6670','#5B7C99','#5B7FB5','#4F7089','#7A8F6E',
+  '#6E8F87','#B23A5E','#A65B7D','#C98CA0','#8F5B82','#6B5B73','#8C7A5C','#B08268','#FFFFFF'
+];
 const STORAGE_KEY = 'nature-class-weekly-schedules';
 
 const firebaseConfig = {
@@ -1451,15 +1433,14 @@ document.getElementById('cardsWrap').addEventListener('change', (e)=>{
 });
 
 function positionPopover(pop, anchor){
-  const r = anchor.getBoundingClientRect();
-  const popW = 236;
-  pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - popW - 8)) + 'px';
-  const popH = pop.offsetHeight;
-  let top = r.bottom + 6;
-  if(top + popH > window.innerHeight - 8){
-    top = Math.max(8, r.top - popH - 6);
-  }
-  pop.style.top = top + 'px';
+  // .style-pop is now a fixed bottom-sheet (positioned via CSS), so no
+  // per-anchor positioning is needed — this just keeps the table clear of it.
+  document.body.classList.add('style-pop-active');
+}
+
+function closeStylePopover(pop){
+  pop.remove();
+  document.body.classList.remove('style-pop-active');
 }
 
 function openCellStylePopover(anchor, cardId, periodN, dayIdx){
@@ -1531,12 +1512,18 @@ function openCellStylePopover(anchor, cardId, periodN, dayIdx){
   });
   pop.appendChild(classBoldRow);
 
+  const closeBtn1 = document.createElement('button');
+  closeBtn1.className = 'pop-close';
+  closeBtn1.textContent = '完成';
+  closeBtn1.addEventListener('click', ()=>closeStylePopover(pop));
+  pop.appendChild(closeBtn1);
+
   document.body.appendChild(pop);
   positionPopover(pop, anchor);
 
   const closeOnce = (ev)=>{
     if(!pop.contains(ev.target) && ev.target !== anchor){
-      pop.remove();
+      closeStylePopover(pop);
       document.removeEventListener('click', closeOnce);
     }
   };
@@ -1605,17 +1592,23 @@ function openGenericStylePopover(anchor, styleObj, opts){
   clearRow.textContent = '清除自訂顏色';
   clearRow.addEventListener('click', ()=>{
     styleObj.color = ''; styleObj.textColor = ''; if('bold' in styleObj) styleObj.bold = false;
-    pop.remove();
+    closeStylePopover(pop);
     render(); saveState();
   });
   pop.appendChild(clearRow);
+
+  const closeBtn2 = document.createElement('button');
+  closeBtn2.className = 'pop-close';
+  closeBtn2.textContent = '完成';
+  closeBtn2.addEventListener('click', ()=>closeStylePopover(pop));
+  pop.appendChild(closeBtn2);
 
   document.body.appendChild(pop);
   positionPopover(pop, anchor);
 
   const closeOnce = (ev)=>{
     if(!pop.contains(ev.target) && ev.target !== anchor){
-      pop.remove();
+      closeStylePopover(pop);
       document.removeEventListener('click', closeOnce);
     }
   };
