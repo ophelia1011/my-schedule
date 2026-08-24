@@ -566,6 +566,19 @@
     }
   }
 
+
+  .period-cell .course > *,
+  .period-cell .richtext > *{
+    margin:0 !important;
+    padding:0 !important;
+    text-indent:0 !important;
+    transform:none !important;
+    position:static !important;
+    left:auto !important;
+    right:auto !important;
+    box-sizing:border-box;
+  }
+
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -1064,6 +1077,24 @@ function removeCard(id){
 
 function escapeAttr(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 function escapeHTML(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function normalizeCourseHTML(html){
+  const box = document.createElement('div');
+  box.innerHTML = html || '';
+  box.querySelectorAll('*').forEach(el=>{
+    el.style.removeProperty('margin');
+    el.style.removeProperty('margin-left');
+    el.style.removeProperty('margin-right');
+    el.style.removeProperty('padding');
+    el.style.removeProperty('padding-left');
+    el.style.removeProperty('padding-right');
+    el.style.removeProperty('text-indent');
+    el.style.removeProperty('transform');
+    el.style.removeProperty('left');
+    el.style.removeProperty('right');
+  });
+  return box.innerHTML;
+}
+
 
 // The HTML `size` attribute estimates width using a narrow reference character (like "0"),
 // which badly under-estimates the width of full-width CJK characters. This weights CJK
@@ -1097,7 +1128,7 @@ function periodRowHTML(card, n){
         <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
         <textarea class="classname autogrow" rows="1" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
       </div>
-      <div class="course richtext" contenteditable="true" style="font-weight:${weight}" data-role="course" data-card="${card.id}" data-period="${n}" data-day="${d}">${cell.course||''}</div>
+      <div class="course richtext" contenteditable="true" style="font-weight:${weight}" data-role="course" data-card="${card.id}" data-period="${n}" data-day="${d}">${normalizeCourseHTML(cell.course||'')}</div>
     </div>`;
   }
   const ptStyle = card.periodTimeStyle[n] || {};
@@ -1518,7 +1549,7 @@ document.getElementById('cardsWrap').addEventListener('input', (e)=>{
   if(t.dataset && t.dataset.role === 'course'){
     const card = getCard(t.dataset.card);
     if(card){
-      card.cells[t.dataset.period][t.dataset.day].course = t.innerHTML;
+      card.cells[t.dataset.period][t.dataset.day].course = normalizeCourseHTML(t.innerHTML);
       debouncedSave();
     }
   }
