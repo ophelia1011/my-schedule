@@ -259,10 +259,13 @@
     flex:1; min-width:0; font-size:calc(var(--course-font-size) - 2px); opacity:0.85;
   }
   .period-cell textarea.course, .period-cell div.course{
-    font-size:var(--course-font-size); font-family:'Fredoka',sans-serif; padding-left:0; margin-top:2px;
+    font-size:var(--course-font-size); font-family:'Fredoka',sans-serif;
+    padding-left:0 !important; padding:0 !important; margin:2px 0 0 0 !important;
+    text-indent:0 !important; margin-left:0 !important;
   }
   .period-cell div.richtext[contenteditable]{
     min-height:15px; word-break:break-word; white-space:pre-wrap;
+    padding:0 !important; margin:0 !important; border:0 !important;
   }
   .period-cell div.richtext[contenteditable]:focus{outline:none;}
   .period-cell div.richtext[contenteditable]:empty:before{
@@ -519,7 +522,7 @@
   </span>
   <button class="tool-btn multiselect" id="multiSelectBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
-  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-3</span>
+  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-4</span>
 </div>
 
 <div id="stylePopSlot"></div>
