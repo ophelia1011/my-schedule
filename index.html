@@ -1006,7 +1006,7 @@ function periodRowHTML(card, n){
         <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
         <textarea class="classname autogrow" rows="1" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
       </div>
-      <div class="course richtext" contenteditable="true" data-placeholder="課程" style="font-weight:${weight}" data-role="course" data-card="${card.id}" data-period="${n}" data-day="${d}">${cell.course||''}</div>
+      <div class="course richtext" contenteditable="true" style="font-weight:${weight}" data-role="course" data-card="${card.id}" data-period="${n}" data-day="${d}">${cell.course||''}</div>
     </div>`;
   }
   const ptStyle = card.periodTimeStyle[n] || {};
