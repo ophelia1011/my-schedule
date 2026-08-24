@@ -104,12 +104,12 @@
   .hcell.multiselectable input, .hcell.multiselectable .color-dot{ pointer-events:none; }
 
   .multiselect-bar{
-    position:fixed; left:12px; right:12px; bottom:20px; z-index:85;
     display:none; flex-direction:column; gap:8px;
-    background:white; border-radius:14px; padding:10px 12px;
+    background:white; border-radius:16px; padding:12px;
     box-shadow:var(--shadow); font-size:12.5px; color:var(--ink);
     border:2px solid var(--purple-light);
-    max-height:46vh; overflow-y:auto;
+    max-width:300px; margin:14px auto 0;
+    max-height:50vh; overflow-y:auto;
   }
   .multiselect-bar.show{display:flex;}
   .multiselect-bar .ms-toprow{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
@@ -126,7 +126,6 @@
     background:var(--gray-light); color:var(--ink); cursor:pointer; font-family:'Fredoka',sans-serif;
     flex:none;
   }
-  body.ms-mode-active{ padding-bottom:400px; }
   .save-status{ font-size:11.5px; color:var(--ink-soft); margin-left:auto; }
 
   .wrap{max-width:720px; margin:0 auto; padding:22px 14px 0;}
@@ -321,9 +320,10 @@
 
   /* ---------- Cell style popover ---------- */
   .style-pop{
-    position:fixed; left:12px; right:12px; bottom:20px; display:none; flex-direction:column; gap:8px;
+    display:none; flex-direction:column; gap:8px;
     background:white; padding:12px; border-radius:16px; box-shadow:var(--shadow);
-    z-index:90; max-height:50vh; overflow-y:auto; border:2px solid var(--pink-light);
+    max-height:50vh; overflow-y:auto; border:2px solid var(--pink-light);
+    max-width:300px; margin:14px auto 0;
   }
   .style-pop.show{display:flex;}
   .style-pop-label{ font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-top:2px; width:100%; }
@@ -343,7 +343,6 @@
     background:var(--gray-light); color:var(--ink); font-size:12.5px; font-weight:700;
     font-family:'Fredoka',sans-serif; cursor:pointer;
   }
-  body.style-pop-active{ padding-bottom:400px; }
 
   .break-row{
     grid-column: 1 / -1;
@@ -509,6 +508,16 @@
   <span class="save-status" id="saveStatus">尚未儲存</span>
 </div>
 
+<div id="stylePopSlot"></div>
+<div class="multiselect-bar" id="multiselectBar">
+  <div class="ms-toprow">
+    <span id="multiselectCount">已選 0 格</span>
+    <button class="msclose" id="multiselectDone">完成</button>
+  </div>
+  <div class="ms-scroll" id="multiselectSwatches"></div>
+  <div class="ms-scroll" id="multiselectTextSwatches"></div>
+</div>
+
 <div class="wrap" id="cardsWrap">
   <div class="empty-state" id="emptyState">
     <div class="big">🦋</div>
@@ -526,14 +535,6 @@
     <button id="useCloudBtn">套用雲端版本</button>
     <button id="keepLocalBtn">保留本機版本</button>
   </div>
-</div>
-<div class="multiselect-bar" id="multiselectBar">
-  <div class="ms-toprow">
-    <span id="multiselectCount">已選 0 格</span>
-    <button class="msclose" id="multiselectDone">完成</button>
-  </div>
-  <div class="ms-scroll" id="multiselectSwatches"></div>
-  <div class="ms-scroll" id="multiselectTextSwatches"></div>
 </div>
 
 </div>
@@ -1312,7 +1313,6 @@ function setMultiSelectMode(on){
   multiSelectMode = on;
   multiSelectBtn.classList.toggle('active', on);
   multiselectBar.classList.toggle('show', on);
-  document.body.classList.toggle('ms-mode-active', on);
   if(!on){ multiSelected.clear(); }
   updateMultiselectCount();
   render();
@@ -1324,12 +1324,34 @@ multiSelectBtn.addEventListener('click', ()=> setMultiSelectMode(!multiSelectMod
 document.getElementById('multiselectDone').addEventListener('click', ()=> setMultiSelectMode(false));
 
 document.getElementById('cardsWrap').addEventListener('paste', (e)=>{
-  const target = e.target;
-  if(target.classList && target.classList.contains('richtext') && target.isContentEditable){
-    e.preventDefault();
-    const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-    document.execCommand('insertText', false, text);
+  const target = e.target.closest ? e.target.closest('.richtext[contenteditable]') : null;
+  if(!target) return;
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+  const sel = window.getSelection();
+  if(!sel || !sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  range.deleteContents();
+  // Build plain, unstyled text nodes (with <br> for line breaks) and insert them directly —
+  // this never carries any inline color/background from the clipboard source or from any
+  // lingering execCommand formatting state, unlike execCommand('insertText', ...).
+  const lines = text.split(/\r\n|\r|\n/);
+  const frag = document.createDocumentFragment();
+  let lastNode = null;
+  lines.forEach((line, i)=>{
+    lastNode = document.createTextNode(line);
+    frag.appendChild(lastNode);
+    if(i < lines.length - 1) frag.appendChild(document.createElement('br'));
+  });
+  range.insertNode(frag);
+  if(lastNode){
+    const newRange = document.createRange();
+    newRange.setStartAfter(lastNode);
+    newRange.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(newRange);
   }
+  target.dispatchEvent(new Event('input', {bubbles:true}));
 });
 
 document.getElementById('cardsWrap').addEventListener('input', (e)=>{
@@ -1433,14 +1455,16 @@ document.getElementById('cardsWrap').addEventListener('change', (e)=>{
 });
 
 function positionPopover(pop, anchor){
-  // .style-pop is now a fixed bottom-sheet (positioned via CSS), so no
-  // per-anchor positioning is needed — this just keeps the table clear of it.
-  document.body.classList.add('style-pop-active');
+  // .style-pop now docks in normal document flow right below the toolbar
+  // (see #stylePopSlot), so it pushes the table down instead of covering it.
+  const slot = document.getElementById('stylePopSlot');
+  slot.innerHTML = '';
+  slot.appendChild(pop);
+  setTimeout(()=>pop.scrollIntoView({behavior:'smooth', block:'nearest'}), 30);
 }
 
 function closeStylePopover(pop){
   pop.remove();
-  document.body.classList.remove('style-pop-active');
 }
 
 function openCellStylePopover(anchor, cardId, periodN, dayIdx){
@@ -1518,7 +1542,6 @@ function openCellStylePopover(anchor, cardId, periodN, dayIdx){
   closeBtn1.addEventListener('click', ()=>closeStylePopover(pop));
   pop.appendChild(closeBtn1);
 
-  document.body.appendChild(pop);
   positionPopover(pop, anchor);
 
   const closeOnce = (ev)=>{
@@ -1603,7 +1626,6 @@ function openGenericStylePopover(anchor, styleObj, opts){
   closeBtn2.addEventListener('click', ()=>closeStylePopover(pop));
   pop.appendChild(closeBtn2);
 
-  document.body.appendChild(pop);
   positionPopover(pop, anchor);
 
   const closeOnce = (ev)=>{
