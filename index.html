@@ -242,10 +242,7 @@
   .period-cell{
     border-radius:12px; padding:6px 7px;
     display:grid; grid-template-columns:12px 1fr; grid-template-rows:auto auto;
-    column-gap:5px; row-gap:2px; position:relative;
-  }
-  .period-cell .top-row{
-    display:contents;
+    column-gap:5px; row-gap:2px; position:relative; align-items:start;
   }
   .color-dot{
     width:12px; height:12px; border-radius:50%; flex:none; cursor:pointer;
@@ -266,7 +263,7 @@
   .period-cell textarea.course, .period-cell div.course{
     font-size:var(--course-font-size); font-family:'Fredoka',sans-serif;
     padding-left:0 !important; padding:0 !important; margin:2px 0 0 0 !important;
-    text-indent:0 !important; margin-left:0 !important;
+    text-indent:0 !important;
     grid-column:1/-1; grid-row:2;
   }
   .period-cell div.richtext[contenteditable]{
@@ -528,7 +525,7 @@
   </span>
   <button class="tool-btn multiselect" id="multiSelectBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
-  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-5</span>
+  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-7</span>
 </div>
 
 <div id="stylePopSlot"></div>
@@ -1013,10 +1010,8 @@ function periodRowHTML(card, n){
     const isSelected = multiSelected.has(cellKey);
     daysHTML += `
     <div class="period-cell ${multiSelectMode?'multiselectable':''} ${isSelected?'multi-selected':''}" data-cellkey="${cellKey}" style="background:${cell.color}; color:${cell.textColor||'#4A4258'};">
-      <div class="top-row">
-        <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
-        <textarea class="classname autogrow" rows="1" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
-      </div>
+      <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
+      <textarea class="classname autogrow" rows="1" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
       <div class="course richtext" contenteditable="true" style="font-weight:${weight}" data-role="course" data-card="${card.id}" data-period="${n}" data-day="${d}">${cell.course||''}</div>
     </div>`;
   }
