@@ -564,7 +564,9 @@ const PALETTE = [
   // 淺莫蘭迪藍
   '#C3D4E0','#AEC6D6','#9DB8CC','#D6E2E8',
   // 乾燥玫瑰粉
-  '#D9B0A8','#E0BEB4','#CBA0A0','#DCACAF'
+  '#D9B0A8','#E0BEB4','#CBA0A0','#DCACAF',
+  // 純白（清空底色用）
+  '#FFFFFF'
 ];
 const TEXT_COLORS = [
   '#4A4258','#2E2E38','#5C6670','#5B7C99','#5B7FB5','#4F7089','#7A8F6E',
@@ -1310,6 +1312,7 @@ function buildMultiselectSwatches(){
     const sw = document.createElement('span');
     sw.className = 'swatch';
     sw.style.background = c;
+    if(c === '#FFFFFF') sw.style.border = '2px solid #ddd';
     sw.addEventListener('click', ()=> applyFieldToMultiSelected('color', c));
     multiselectSwatchesEl.appendChild(sw);
   });
@@ -1509,6 +1512,7 @@ function openCellStylePopover(anchor, cardId, periodN, dayIdx){
     const sw = document.createElement('span');
     sw.className = 'swatch' + (c===cell.color ? ' active' : '');
     sw.style.background = c;
+    if(c === '#FFFFFF') sw.style.border = '2px solid #ddd';
     sw.addEventListener('click', ()=>{
       cell.color = c;
       bgGrid.querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
@@ -1594,6 +1598,7 @@ function openGenericStylePopover(anchor, styleObj, opts){
     const sw = document.createElement('span');
     sw.className = 'swatch' + (c===styleObj.color ? ' active' : '');
     sw.style.background = c;
+    if(c === '#FFFFFF') sw.style.border = '2px solid #ddd';
     sw.addEventListener('click', ()=>{
       styleObj.color = c;
       render(); saveState();
