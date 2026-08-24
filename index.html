@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- VERSION: 2026-08-25-v9-final-alignment -->
+<!-- VERSION: 2026-08-24-v2 (課程文字對齊圓點 / 班級課程空白皆可清空) -->
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
@@ -219,149 +219,88 @@
   }
   .color-dot.header-dot{ position:absolute; top:3px; left:2px; width:7px; height:7px; }
   .hcell input{
-    width:auto; text-align:left; border:none; background:transparent;
+    width:auto; text-align:center; border:none; background:transparent;
     font-family:'Fredoka',sans-serif; font-weight:700; font-size:12.5px; color:var(--pink-deep);
-    margin-left:7px;
   }
   .hcell input:focus{outline:none;}
   .cell-num,.cell-time{
     position:relative;
-    display:flex; align-items:center; justify-content:flex-start;
+    display:flex; align-items:center; justify-content:center;
     background:var(--gray-light); border-radius:10px;
   }
-  .cell-num{ padding:4px 2px 4px 11px; }
-  .cell-time{ padding:4px 2px 4px 11px; }
+  .cell-num{ padding:4px 2px 4px 6px; }
+  .cell-time{ padding:4px 2px 4px 7px; }
   .color-dot.period-dot{ position:absolute; top:2px; left:2px; width:7px; height:7px; }
   .color-dot.break-dot{width:9px; height:9px;}
   .cell-num input, .cell-time input{
-    width:auto; text-align:left; border:none; background:transparent;
+    width:auto; text-align:center; border:none; background:transparent;
     font-size:var(--period-font-size); font-weight:600; color:var(--ink-soft); font-family:'Fredoka',sans-serif;
   }
   .cell-time input{font-size:calc(var(--period-font-size) - 2px); padding:0;}
   .cell-num input:focus, .cell-time input:focus{outline:none;}
 
   .period-cell{
-    border-radius:12px;
-    padding:4px;
-    display:grid;
-    grid-template-columns:12px minmax(0,1fr);
-    grid-template-rows:auto auto;
-    column-gap:4px;
-    row-gap:1px;
-    position:relative;
-    min-width:0;
-    overflow:hidden;
+    border-radius:12px; padding:6px 7px;
+    display:grid; grid-template-columns:12px minmax(0,1fr); grid-template-rows:auto auto;
+    column-gap:5px; row-gap:2px; position:relative;
+    min-width:0; overflow:hidden;
   }
-
   .period-cell .top-row{
-    grid-column:1 / 3;
+    grid-column:1 / -1;
     grid-row:1;
     display:grid;
     grid-template-columns:12px minmax(0,1fr);
-    column-gap:4px;
-    width:100%;
+    column-gap:5px;
     min-width:0;
-    align-items:start;
   }
-
-  .period-cell .color-dot{
-    width:12px;
-    height:12px;
-    border-radius:50%;
-    flex:none;
-    cursor:pointer;
-    border:2px solid rgba(255,255,255,0.9);
-    box-shadow:0 0 0 1px rgba(0,0,0,0.08);
-    margin-top:2px;
-    display:block;
-    box-sizing:border-box;
+  .color-dot{
+    width:12px; height:12px; border-radius:50%; flex:none; cursor:pointer;
+    border:2px solid rgba(255,255,255,0.9); box-shadow:0 0 0 1px rgba(0,0,0,0.08);
+    margin-top:2px; display:inline-block;
+    grid-column:1; grid-row:1;
   }
-
-  .period-cell textarea.autogrow{
-    resize:none;
-    overflow:hidden;
-    border:none;
-    outline:none;
-    background:transparent;
-    width:100%;
-    min-width:0;
-    max-width:100%;
-    font-family:inherit;
-    line-height:1.35;
-    padding:0 !important;
-    margin:0 !important;
-    display:block;
-    color:inherit;
-    box-sizing:border-box;
+  textarea.autogrow{
+    resize:none; overflow:hidden; border:none; background:transparent;
+    width:100%; font-family:inherit; line-height:1.35; padding:0; margin:0;
+    display:block; color:inherit;
   }
-
+  textarea.autogrow:focus{outline:none;}
   .period-cell textarea.classname{
-    grid-column:2;
-    grid-row:1;
-    width:100% !important;
-    min-width:0 !important;
-    max-width:100% !important;
-    font-size:calc(var(--course-font-size) - 2px);
-    opacity:0.85;
-    padding:0 !important;
-    margin:0 !important;
-    text-indent:0 !important;
-    text-align:left !important;
-    overflow:hidden;
-    white-space:pre-wrap;
-    overflow-wrap:anywhere;
-    box-sizing:border-box;
+    grid-column:2; grid-row:1;
+    min-width:0; width:100%;
+    font-size:calc(var(--course-font-size) - 2px); opacity:0.85;
   }
 
-  /* 課程第二列：橫跨整個課格，左邊緣與圓點左邊緣完全相同 */
-  .period-cell > .course{
-    grid-column:1 / 3 !important;
+  /* 課程內容：獨立第二列，從左上角圓點的左邊緣開始。
+     班級仍然只佔第一列，不會影響課程的 X 位置。 */
+  .period-cell > div.course{
+    grid-column:1 / -1 !important;
     grid-row:2 !important;
-    display:block !important;
-    justify-self:stretch !important;
     width:100% !important;
     min-width:0 !important;
     max-width:100% !important;
     box-sizing:border-box !important;
     font-size:var(--course-font-size);
     font-family:'Fredoka',sans-serif;
-    line-height:1.35;
     padding:0 !important;
-    margin:1px 0 0 0 !important;
+    margin:2px 0 0 0 !important;
     text-indent:0 !important;
     text-align:left !important;
+    line-height:1.35;
     white-space:pre-wrap;
     overflow-wrap:anywhere;
     word-break:break-word;
     overflow:hidden;
   }
-
-  .period-cell > .course.richtext[contenteditable]{
-    min-height:15px;
-    height:auto;
-    border:0 !important;
-    outline:none !important;
+  .period-cell div.richtext[contenteditable]{
+    min-height:15px; word-break:break-word; white-space:pre-wrap;
+    padding:0 !important; margin:0 !important; border:0 !important;
   }
-
-  .period-cell > .course > *,
-  .period-cell > .course *{
-    margin:0 !important;
-    padding:0 !important;
-    text-indent:0 !important;
-    transform:none !important;
-    position:static !important;
+  .period-cell div.richtext[contenteditable]:focus{outline:none;}
+  .period-cell div.richtext[contenteditable]:empty:before{
+    content: attr(data-placeholder); opacity:0.45;
   }
-
   .period-cell input:focus{outline:none;}
-
-  .cell-num input,
-  .cell-time input{
-    min-width:0;
-    max-width:100%;
-    box-sizing:border-box;
-    overflow:hidden;
-    text-overflow:clip;
-  }
 
   /* ---------- Selection formatting mini toolbar ---------- */
   .sel-toolbar{
@@ -440,7 +379,7 @@
 
   .break-row{
     grid-column: 1 / -1;
-    display:flex; align-items:center; justify-content:flex-start; gap:6px;
+    display:flex; align-items:center; justify-content:center; gap:10px;
     background:var(--pink-light); border-radius:10px; padding:5px 8px;
   }
   .break-row input.blabel{
@@ -1024,9 +963,7 @@ function latestDatedCard(){
 function addCard(){
   const c = defaultCard();
   const ref = latestDatedCard() || cards[0];
-
   if(ref){
-    // 週表本身的結構／標題／節次／時間／break 保留。
     c.classroomTitle = ref.classroomTitle;
     c.days = ref.days.slice();
     c.colLabels = {...ref.colLabels};
@@ -1037,40 +974,17 @@ function addCard(){
     c.headerStyle = JSON.parse(JSON.stringify(ref.headerStyle));
     c.periodStyle = JSON.parse(JSON.stringify(ref.periodStyle));
     c.periodTimeStyle = JSON.parse(JSON.stringify(ref.periodTimeStyle));
-
     Object.keys(c.cells).forEach(n=>{
       Object.keys(c.cells[n]).forEach(d=>{
-        const refCell = ref.cells?.[n]?.[d];
-        if(!refCell) return;
-
-        // 只複製：
-        // ① 班級
-        // ② 班級粗體
-        // ③ 格子的背景色
-        // ④ 格子的文字顏色
-        //
-        // 絕對不複製課程內容、課程粗體或其他課程 rich-text。
-        c.cells[n][d].className = refCell.className || '';
-        c.cells[n][d].classNameBold = !!refCell.classNameBold;
-        c.cells[n][d].color = refCell.color || '';
-        c.cells[n][d].textColor = refCell.textColor || '#4A4258';
-        c.cells[n][d].course = '';
-        c.cells[n][d].bold = true;
-      });
-    });
-
-    // 最後再做一次「全部清空課程」保證，避免任何舊資料／共用參照混入。
-    Object.keys(c.cells).forEach(n=>{
-      Object.keys(c.cells[n]).forEach(d=>{
-        c.cells[n][d].course = '';
-      });
-    });
-
-    // 新增一週：只保留班級、背景色、文字色與班級粗體。
-    // 課程內容一律清空，不複製上一週課程。
-    Object.keys(c.cells).forEach(n=>{
-      Object.keys(c.cells[n]).forEach(d=>{
-        c.cells[n][d].course = '';
+        const refCell = ref.cells && ref.cells[n] && ref.cells[n][d];
+        if(refCell){
+          c.cells[n][d].color = refCell.color;
+          c.cells[n][d].textColor = refCell.textColor;
+          c.cells[n][d].bold = refCell.bold;
+          c.cells[n][d].className = refCell.className;
+          c.cells[n][d].classNameBold = refCell.classNameBold;
+          c.cells[n][d].course = '';
+        }
       });
     });
     if(ref.weekStart){
@@ -1080,11 +994,9 @@ function addCard(){
       c.weekLabel = weekRangeLabel(c.weekStart);
     }
   }
-
   cards.push(c);
   expandedIds.add(c.id);
-  render();
-  saveState();
+  render(); saveState();
   setTimeout(()=>scrollToCard(c.id), 60);
 }
 
@@ -1096,20 +1008,6 @@ function removeCard(id){
 
 function escapeAttr(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 function escapeHTML(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function normalizeCourseHTML(html){
-  const box=document.createElement('div');
-  box.innerHTML=html||'';
-  box.querySelectorAll('*').forEach(el=>{
-    ['margin','margin-left','margin-right','padding','padding-left','padding-right',
-     'text-indent','transform','left','right','position'].forEach(k=>el.style.removeProperty(k));
-  });
-  const walker=document.createTreeWalker(box,NodeFilter.SHOW_TEXT);
-  const nodes=[];
-  while(walker.nextNode()) nodes.push(walker.currentNode);
-  nodes.forEach(node=>node.nodeValue=node.nodeValue.replace(/^[\t \u00a0]+/,''));
-  return box.innerHTML;
-}
-
 
 // The HTML `size` attribute estimates width using a narrow reference character (like "0"),
 // which badly under-estimates the width of full-width CJK characters. This weights CJK
@@ -1143,7 +1041,7 @@ function periodRowHTML(card, n){
         <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
         <textarea class="classname autogrow" rows="1" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
       </div>
-      <div class="course richtext" contenteditable="true" style="font-weight:${weight}" data-role="course" data-card="${card.id}" data-period="${n}" data-day="${d}">${normalizeCourseHTML(cell.course||'')}</div>
+      <div class="course richtext" contenteditable="true" style="font-weight:${weight}" data-role="course" data-card="${card.id}" data-period="${n}" data-day="${d}">${cell.course||''}</div>
     </div>`;
   }
   const ptStyle = card.periodTimeStyle[n] || {};
@@ -1486,32 +1384,6 @@ function updateMultiselectCount(){
 multiSelectBtn.addEventListener('click', ()=> setMultiSelectMode(!multiSelectMode));
 document.getElementById('multiselectDone').addEventListener('click', ()=> setMultiSelectMode(false));
 
-// 在課格內按 Delete：清空該格的「班級＋課程」內容，不影響其他格。
-document.getElementById('cardsWrap').addEventListener('keydown', (e)=>{
-  if(multiSelectMode || e.key !== 'Delete') return;
-  const t = e.target;
-  const cellEl = t.closest && t.closest('.period-cell');
-  if(!cellEl) return;
-  const role = t.dataset && t.dataset.role;
-  if(role !== 'classname' && role !== 'course') return;
-
-  const card = getCard(t.dataset.card);
-  const period = t.dataset.period;
-  const day = t.dataset.day;
-  if(!card || !card.cells[period] || !card.cells[period][day]) return;
-
-  e.preventDefault();
-  const cell = card.cells[period][day];
-  cell.className = '';
-  cell.course = '';
-
-  const classEl = cellEl.querySelector('[data-role="classname"]');
-  const courseEl = cellEl.querySelector('[data-role="course"]');
-  if(classEl) { classEl.value = ''; autoGrowEl(classEl); }
-  if(courseEl) courseEl.innerHTML = '';
-  debouncedSave();
-});
-
 document.getElementById('cardsWrap').addEventListener('paste', (e)=>{
   const target = e.target.closest ? e.target.closest('.richtext[contenteditable]') : null;
   if(!target) return;
@@ -1551,7 +1423,7 @@ document.getElementById('cardsWrap').addEventListener('input', (e)=>{
   if(t.dataset && t.dataset.role === 'course'){
     const card = getCard(t.dataset.card);
     if(card){
-      card.cells[t.dataset.period][t.dataset.day].course = normalizeCourseHTML(t.innerHTML);
+      card.cells[t.dataset.period][t.dataset.day].course = t.innerHTML;
       debouncedSave();
     }
   }
@@ -1893,7 +1765,7 @@ function applyToSelection(cmd, val){
   }catch(err){ console.error('format failed', err); }
   const card = getCard(activeCourseEl.dataset.card);
   if(card){
-    card.cells[activeCourseEl.dataset.period][activeCourseEl.dataset.day].course = normalizeCourseHTML(activeCourseEl.innerHTML);
+    card.cells[activeCourseEl.dataset.period][activeCourseEl.dataset.day].course = activeCourseEl.innerHTML;
     debouncedSave();
   }
   // refresh the saved range to match the (possibly now-different) selection
