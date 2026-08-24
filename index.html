@@ -241,17 +241,11 @@
 
   .period-cell{
     border-radius:12px; padding:6px 7px;
-    display:grid; grid-template-columns:12px minmax(0,1fr); grid-template-rows:auto auto;
+    display:grid; grid-template-columns:12px 1fr; grid-template-rows:auto auto;
     column-gap:5px; row-gap:2px; position:relative;
-    min-width:0; overflow:hidden;
   }
   .period-cell .top-row{
-    grid-column:1 / -1;
-    grid-row:1;
-    display:grid;
-    grid-template-columns:12px minmax(0,1fr);
-    column-gap:5px;
-    min-width:0;
+    display:contents;
   }
   .color-dot{
     width:12px; height:12px; border-radius:50%; flex:none; cursor:pointer;
@@ -266,31 +260,14 @@
   }
   textarea.autogrow:focus{outline:none;}
   .period-cell textarea.classname{
+    flex:1; min-width:0; font-size:calc(var(--course-font-size) - 2px); opacity:0.85;
     grid-column:2; grid-row:1;
-    min-width:0; width:100%;
-    font-size:calc(var(--course-font-size) - 2px); opacity:0.85;
   }
-
-  /* 課程內容：獨立第二列，從左上角圓點的左邊緣開始。
-     班級仍然只佔第一列，不會影響課程的 X 位置。 */
-  .period-cell > div.course{
-    grid-column:1 / -1 !important;
-    grid-row:2 !important;
-    width:100% !important;
-    min-width:0 !important;
-    max-width:100% !important;
-    box-sizing:border-box !important;
-    font-size:var(--course-font-size);
-    font-family:'Fredoka',sans-serif;
-    padding:0 !important;
-    margin:2px 0 0 0 !important;
-    text-indent:0 !important;
-    text-align:left !important;
-    line-height:1.35;
-    white-space:pre-wrap;
-    overflow-wrap:anywhere;
-    word-break:break-word;
-    overflow:hidden;
+  .period-cell textarea.course, .period-cell div.course{
+    font-size:var(--course-font-size); font-family:'Fredoka',sans-serif;
+    padding-left:0 !important; padding:0 !important; margin:2px 0 0 0 !important;
+    text-indent:0 !important; margin-left:0 !important;
+    grid-column:1/-1; grid-row:2;
   }
   .period-cell div.richtext[contenteditable]{
     min-height:15px; word-break:break-word; white-space:pre-wrap;
@@ -301,6 +278,30 @@
     content: attr(data-placeholder); opacity:0.45;
   }
   .period-cell input:focus{outline:none;}
+
+
+  /* ===== FINAL: 課程文字只對齊課格左上角圓點 =====
+     節次 / Time / 數字區完全不碰 */
+  .period-cell > .course{
+    grid-column:1 / -1 !important;
+    grid-row:2 !important;
+    position:relative !important;
+    left:-17px !important;
+    width:calc(100% + 17px) !important;
+    max-width:none !important;
+    padding:0 !important;
+    margin:2px 0 0 0 !important;
+    text-indent:0 !important;
+    text-align:left !important;
+    box-sizing:border-box !important;
+  }
+
+  .period-cell > .course *{
+    margin-left:0 !important;
+    padding-left:0 !important;
+    text-indent:0 !important;
+    transform:none !important;
+  }
 
   /* ---------- Selection formatting mini toolbar ---------- */
   .sel-toolbar{
@@ -551,7 +552,7 @@
   </span>
   <button class="tool-btn multiselect" id="multiSelectBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
-  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-5</span>
+  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-25-final-course-dot</span>
 </div>
 
 <div id="stylePopSlot"></div>
@@ -963,30 +964,37 @@ function latestDatedCard(){
 function addCard(){
   const c = defaultCard();
   const ref = latestDatedCard() || cards[0];
+
   if(ref){
+    // 只複製「班級＋課格顏色」；不複製任何課程內容或其他下方文字。
     c.classroomTitle = ref.classroomTitle;
     c.days = ref.days.slice();
     c.colLabels = {...ref.colLabels};
     c.periodNums = {...ref.periodNums};
     c.periodTimes = {...ref.periodTimes};
-    c.breaksA = ref.breaksA.map(b=>({...b}));
-    c.breaksB = ref.breaksB.map(b=>({...b}));
+    c.breaksA = ref.breaksA.map(b=>({label:b.label, time:b.time}));
+    c.breaksB = ref.breaksB.map(b=>({label:b.label, time:b.time}));
+
+    // 保留表頭的顏色設定、節次/時間本身的顏色設定
     c.headerStyle = JSON.parse(JSON.stringify(ref.headerStyle));
     c.periodStyle = JSON.parse(JSON.stringify(ref.periodStyle));
     c.periodTimeStyle = JSON.parse(JSON.stringify(ref.periodTimeStyle));
+
     Object.keys(c.cells).forEach(n=>{
       Object.keys(c.cells[n]).forEach(d=>{
         const refCell = ref.cells && ref.cells[n] && ref.cells[n][d];
+        // course 永遠維持 defaultCard() 的空字串
         if(refCell){
-          c.cells[n][d].color = refCell.color;
-          c.cells[n][d].textColor = refCell.textColor;
-          c.cells[n][d].bold = refCell.bold;
-          c.cells[n][d].className = refCell.className;
-          c.cells[n][d].classNameBold = refCell.classNameBold;
+          c.cells[n][d].className = refCell.className || '';
+          c.cells[n][d].color = refCell.color || '';
+          c.cells[n][d].textColor = refCell.textColor || '#4A4258';
+          c.cells[n][d].course = '';
+        }else{
           c.cells[n][d].course = '';
         }
       });
     });
+
     if(ref.weekStart){
       const d = new Date(ref.weekStart + 'T00:00:00');
       d.setDate(d.getDate()+7);
@@ -994,10 +1002,28 @@ function addCard(){
       c.weekLabel = weekRangeLabel(c.weekStart);
     }
   }
+
+  // 最終保險：新週所有課程與其他「課程下方資料」全部維持空白。
+  Object.keys(c.cells).forEach(n=>{
+    Object.keys(c.cells[n]).forEach(d=>{
+      c.cells[n][d].course = '';
+    });
+  });
+  c.notes = {
+    highlights:{0:'',1:'',2:'',3:'',4:''},
+    absentStudents:{0:'',1:'',2:'',3:'',4:''},
+    missingHW:{0:'',1:'',2:'',3:'',4:''},
+    precautions:'',
+    equipment:'',
+    links:[],
+    todos:[]
+  };
+
   cards.push(c);
   expandedIds.add(c.id);
-  render(); saveState();
-  setTimeout(()=>scrollToCard(c.id), 60);
+  render();
+  saveState();
+  setTimeout(()=>scrollToCard(c.id),60);
 }
 
 function removeCard(id){
