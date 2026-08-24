@@ -271,10 +271,19 @@
     text-align:left; text-indent:0 !important;
   }
   .period-cell textarea.course, .period-cell div.course{
-    font-size:var(--course-font-size); font-family:'Fredoka',sans-serif;
-    padding:0 !important; margin:2px 0 0 0 !important;
-    text-indent:0 !important; margin-left:0 !important;
-    grid-column:1 / -1; grid-row:2;
+    font-size:var(--course-font-size);
+    font-family:'Fredoka',sans-serif;
+    padding:0 !important;
+    margin:2px 0 0 0 !important;
+    text-indent:0 !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+    grid-column:1 / -1;
+    grid-row:2;
+    overflow-wrap:anywhere;
+    word-break:break-word;
   }
 
   /* 空白課格恢復原本正常的格子高度，不額外縮小 */
@@ -506,6 +515,18 @@
       z-index:88;
     }
   }
+
+  /* 課程文字：第二列從左上角圓點的左邊緣開始 */
+  .period-cell .course{
+    justify-self:start;
+    align-self:start;
+  }
+
+  /* Delete 清空後恢復一般空白課格的正常高度 */
+  .period-cell.is-empty{
+    min-height:34px;
+  }
+
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -1032,7 +1053,7 @@ function periodRowHTML(card, n){
     const cellKey = `${card.id}|${n}|${d}`;
     const isSelected = multiSelected.has(cellKey);
     daysHTML += `
-    <div class="period-cell ${multiSelectMode?'multiselectable':''} ${isSelected?'multi-selected':''}" data-cellkey="${cellKey}" style="background:${cell.color}; color:${cell.textColor||'#4A4258'};">
+    <div class="period-cell ${(!cell.className && !cell.course) ? 'is-empty' : ''} ${multiSelectMode?'multiselectable':''} ${isSelected?'multi-selected':''}" data-cellkey="${cellKey}" style="background:${cell.color}; color:${cell.textColor||'#4A4258'};">
       <div class="top-row">
         <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
         <textarea class="classname autogrow" rows="1" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
