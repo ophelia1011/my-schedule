@@ -261,7 +261,7 @@
   textarea.autogrow:focus{outline:none;}
   .period-cell textarea.classname{
     flex:none; min-width:0; font-size:calc(var(--course-font-size) - 2px); opacity:0.85;
-    padding-left:17px;
+    padding-left:14px;
   }
   .period-cell textarea.course, .period-cell div.course{
     font-size:var(--course-font-size); font-family:'Fredoka',sans-serif;
@@ -529,7 +529,7 @@
   </span>
   <button class="tool-btn multiselect" id="multiSelectBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
-  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-14</span>
+  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-16</span>
 </div>
 
 <div id="stylePopSlot"></div>
@@ -1242,6 +1242,11 @@ function render(){
   }
   wrap.innerHTML = sortedCardsForRender().map(cardHTML).join('');
   wrap.querySelectorAll('textarea.autogrow').forEach(autoGrowEl);
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(()=>{
+      wrap.querySelectorAll('textarea.autogrow').forEach(autoGrowEl);
+    });
+  }
 }
 
 document.getElementById('cardsWrap').addEventListener('toggle', (e)=>{
