@@ -525,7 +525,7 @@
   </span>
   <button class="tool-btn multiselect" id="multiSelectBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
-  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-8</span>
+  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-9</span>
 </div>
 
 <div id="stylePopSlot"></div>
@@ -1229,6 +1229,20 @@ function scrollToCard(id){
   if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
+function alignCourseToDot(){
+  document.querySelectorAll('.period-cell').forEach(cell=>{
+    const dot = cell.querySelector('.color-dot');
+    const course = cell.querySelector('.course');
+    if(!dot || !course) return;
+    const cellRect = cell.getBoundingClientRect();
+    const dotLeft = dot.getBoundingClientRect().left - cellRect.left;
+    course.style.marginLeft = '0px';
+    const courseLeft = course.getBoundingClientRect().left - cellRect.left;
+    const diff = dotLeft - courseLeft;
+    course.style.marginLeft = diff + 'px';
+  });
+}
+
 function render(){
   const wrap = document.getElementById('cardsWrap');
   if(!loaded) return;
@@ -1238,7 +1252,10 @@ function render(){
   }
   wrap.innerHTML = sortedCardsForRender().map(cardHTML).join('');
   wrap.querySelectorAll('textarea.autogrow').forEach(autoGrowEl);
+  requestAnimationFrame(alignCourseToDot);
 }
+
+window.addEventListener('resize', ()=>{ requestAnimationFrame(alignCourseToDot); });
 
 document.getElementById('cardsWrap').addEventListener('toggle', (e)=>{
   const el = e.target;
@@ -1396,6 +1413,7 @@ document.getElementById('cardsWrap').addEventListener('input', (e)=>{
   const t = e.target;
   if(t.classList && t.classList.contains('autogrow')){
     autoGrowEl(t);
+    requestAnimationFrame(alignCourseToDot);
   }
   if(t.dataset && t.dataset.role === 'course'){
     const card = getCard(t.dataset.card);
