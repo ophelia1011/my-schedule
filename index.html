@@ -530,7 +530,7 @@
   </span>
   <button class="tool-btn multiselect" id="multiSelectBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
-  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-22</span>
+  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-23</span>
 </div>
 
 <div id="stylePopSlot"></div>
@@ -969,7 +969,7 @@ function addCard(){
     if(ref.weekStart){
       const d = new Date(ref.weekStart + 'T00:00:00');
       d.setDate(d.getDate()+7);
-      c.weekStart = d.toISOString().slice(0,10);
+      c.weekStart = toLocalISODate(d);
       c.weekLabel = weekRangeLabel(c.weekStart);
     }
   }
@@ -1199,7 +1199,10 @@ function autoGrowEl(el){
 }
 
 function todayISO(){
-  const d = new Date();
+  return toLocalISODate(new Date());
+}
+
+function toLocalISODate(d){
   const pad = n=>String(n).padStart(2,'0');
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 }
@@ -1515,7 +1518,7 @@ document.getElementById('cardsWrap').addEventListener('change', (e)=>{
       const dow = d.getDay(); // 0=Sun..6=Sat
       const diffToMonday = dow === 0 ? -6 : (1 - dow); // snap back to this week's Monday
       d.setDate(d.getDate() + diffToMonday);
-      card.weekStart = d.toISOString().slice(0,10);
+      card.weekStart = toLocalISODate(d);
     }else{
       card.weekStart = t.value;
     }
