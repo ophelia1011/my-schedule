@@ -261,7 +261,7 @@
   textarea.autogrow:focus{outline:none;}
   .period-cell textarea.classname{
     flex:none; min-width:0; font-size:calc(var(--course-font-size) - 2px); opacity:0.85;
-    padding-left:14px;
+    padding-left:12px;
   }
   .period-cell textarea.course, .period-cell div.course{
     font-size:var(--course-font-size); font-family:'Fredoka',sans-serif;
@@ -529,7 +529,7 @@
   </span>
   <button class="tool-btn multiselect" id="multiSelectBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
-  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-16</span>
+  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-18</span>
 </div>
 
 <div id="stylePopSlot"></div>
@@ -810,6 +810,7 @@ function normalizeCard(c){
         if(cell.textColor === undefined) cell.textColor = '#4A4258';
         if(cell.bold === undefined) cell.bold = true;
         if(cell.classNameBold === undefined) cell.classNameBold = false;
+        if(cell.className) cell.className = cell.className.replace(/[\r\n]+/g, '');
         // migrate legacy plain-text course into rich-text HTML (so per-selection color/bold works)
         if(cell.course && cell.course.indexOf('<') === -1){
           cell.course = escapeHTML(cell.course).replace(/\n/g,'<br>');
@@ -1422,6 +1423,11 @@ document.getElementById('cardsWrap').addEventListener('keydown', (e)=>{
 
 document.getElementById('cardsWrap').addEventListener('input', (e)=>{
   const t = e.target;
+  if(t.classList && t.classList.contains('classname') && /[\r\n]/.test(t.value)){
+    const pos = t.selectionStart;
+    t.value = t.value.replace(/[\r\n]+/g, '');
+    t.selectionStart = t.selectionEnd = Math.max(0, pos - 1);
+  }
   if(t.classList && t.classList.contains('autogrow')){
     autoGrowEl(t);
   }
@@ -1504,7 +1510,7 @@ document.getElementById('cardsWrap').addEventListener('change', (e)=>{
   if(role === 'daylabel'){ card.days[Number(d)] = t.value; saveState(); return; }
   if(role === 'periodnum'){ card.periodNums[p] = t.value; saveState(); return; }
   if(role === 'periodtime'){ card.periodTimes[p] = t.value; saveState(); return; }
-  if(role === 'classname'){ card.cells[p][d].className = t.value; saveState(); return; }
+  if(role === 'classname'){ card.cells[p][d].className = t.value.replace(/[\r\n]+/g, ''); saveState(); return; }
   if(role === 'breaklabel'){ card[t.dataset.group][idx].label = t.value; saveState(); return; }
   if(role === 'breaktime'){ card[t.dataset.group][idx].time = t.value; saveState(); return; }
   if(role === 'notefield'){ card.notes[t.dataset.key] = t.value; saveState(); return; }
