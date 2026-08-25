@@ -242,10 +242,7 @@
   .period-cell{
     border-radius:12px; padding:6px 7px;
     display:grid; grid-template-columns:12px 1fr; grid-template-rows:auto auto;
-    column-gap:5px; row-gap:2px; position:relative;
-  }
-  .period-cell .top-row{
-    display:contents;
+    column-gap:5px; row-gap:2px; position:relative; align-items:start;
   }
   .color-dot{
     width:12px; height:12px; border-radius:50%; flex:none; cursor:pointer;
@@ -263,35 +260,11 @@
     flex:1; min-width:0; font-size:calc(var(--course-font-size) - 2px); opacity:0.85;
     grid-column:2; grid-row:1;
   }
-  /* 課程內容：獨立第二列，左邊緣與左上角圓點完全對齊。
-     不使用負 left / 負 margin，因此文字不會跑出格子。 */
-  .period-cell textarea.course,
-  .period-cell div.course{
-    grid-column:1 / -1 !important;
-    grid-row:2 !important;
-    display:block !important;
-    width:100% !important;
-    min-width:0 !important;
-    max-width:100% !important;
-    box-sizing:border-box !important;
-    font-size:var(--course-font-size);
-    font-family:'Fredoka',sans-serif;
-    padding:0 !important;
-    margin:2px 0 0 0 !important;
-    text-indent:0 !important;
-    margin-left:0 !important;
-    text-align:left !important;
-    white-space:pre-wrap !important;
-    overflow-wrap:anywhere !important;
-    word-break:break-word !important;
-    overflow:hidden !important;
-  }
-
-  .period-cell div.course *,
-  .period-cell textarea.course *{
-    margin-left:0 !important;
-    padding-left:0 !important;
-    text-indent:0 !important;
+  .period-cell textarea.course, .period-cell div.course{
+    font-size:var(--course-font-size); font-family:'Fredoka',sans-serif;
+    padding-left:0 !important; padding:0 !important; margin:2px 0 0 0 !important;
+    text-indent:0 !important; text-align:left !important; box-sizing:border-box !important;
+    grid-column:1 / -1 !important; grid-row:2 !important; width:100% !important;
   }
   .period-cell div.richtext[contenteditable]{
     min-height:15px; word-break:break-word; white-space:pre-wrap;
@@ -552,7 +525,7 @@
   </span>
   <button class="tool-btn multiselect" id="multiSelectBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
-  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-5</span>
+  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-8</span>
 </div>
 
 <div id="stylePopSlot"></div>
@@ -964,43 +937,40 @@ function latestDatedCard(){
 function addCard(){
   const c = defaultCard();
   const ref = latestDatedCard() || cards[0];
-
   if(ref){
-    // 只複製每個課格的：班級、背景色、文字色。
-    // 不複製課程文字，也不複製課程下方的其他內容。
+    c.classroomTitle = ref.classroomTitle;
+    c.days = ref.days.slice();
+    c.colLabels = {...ref.colLabels};
+    c.periodNums = {...ref.periodNums};
+    c.periodTimes = {...ref.periodTimes};
+    c.breaksA = ref.breaksA.map(b=>({...b}));
+    c.breaksB = ref.breaksB.map(b=>({...b}));
+    c.headerStyle = JSON.parse(JSON.stringify(ref.headerStyle));
+    c.periodStyle = JSON.parse(JSON.stringify(ref.periodStyle));
+    c.periodTimeStyle = JSON.parse(JSON.stringify(ref.periodTimeStyle));
     Object.keys(c.cells).forEach(n=>{
       Object.keys(c.cells[n]).forEach(d=>{
-        const src = ref.cells && ref.cells[n] && ref.cells[n][d];
-        if(src){
-          c.cells[n][d].className = src.className || '';
-          c.cells[n][d].color = src.color || '';
-          c.cells[n][d].textColor = src.textColor || '#4A4258';
+        const refCell = ref.cells && ref.cells[n] && ref.cells[n][d];
+        if(refCell){
+          c.cells[n][d].color = refCell.color;
+          c.cells[n][d].textColor = refCell.textColor;
+          c.cells[n][d].bold = refCell.bold;
+          c.cells[n][d].className = refCell.className;
+          c.cells[n][d].classNameBold = refCell.classNameBold;
         }
-        c.cells[n][d].course = '';
       });
     });
-
-    // 週日期往後一週；其他週表結構維持原始 defaultCard()。
     if(ref.weekStart){
-      const dt = new Date(ref.weekStart + 'T00:00:00');
-      dt.setDate(dt.getDate()+7);
-      c.weekStart = dt.toISOString().slice(0,10);
+      const d = new Date(ref.weekStart + 'T00:00:00');
+      d.setDate(d.getDate()+7);
+      c.weekStart = d.toISOString().slice(0,10);
       c.weekLabel = weekRangeLabel(c.weekStart);
     }
   }
-
-  // 新週的課程內容強制保持空白。
-  Object.keys(c.cells).forEach(n=>{
-    Object.keys(c.cells[n]).forEach(d=>{
-      c.cells[n][d].course = '';
-    });
-  });
-
   cards.push(c);
   expandedIds.add(c.id);
-  render();
-  saveState();
-  setTimeout(()=>scrollToCard(c.id),60);
+  render(); saveState();
+  setTimeout(()=>scrollToCard(c.id), 60);
 }
 
 function removeCard(id){
@@ -1040,10 +1010,8 @@ function periodRowHTML(card, n){
     const isSelected = multiSelected.has(cellKey);
     daysHTML += `
     <div class="period-cell ${multiSelectMode?'multiselectable':''} ${isSelected?'multi-selected':''}" data-cellkey="${cellKey}" style="background:${cell.color}; color:${cell.textColor||'#4A4258'};">
-      <div class="top-row">
-        <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
-        <textarea class="classname autogrow" rows="1" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
-      </div>
+      <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
+      <textarea class="classname autogrow" rows="1" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
       <div class="course richtext" contenteditable="true" style="font-weight:${weight}" data-role="course" data-card="${card.id}" data-period="${n}" data-day="${d}">${cell.course||''}</div>
     </div>`;
   }
@@ -1386,6 +1354,12 @@ function updateMultiselectCount(){
 }
 multiSelectBtn.addEventListener('click', ()=> setMultiSelectMode(!multiSelectMode));
 document.getElementById('multiselectDone').addEventListener('click', ()=> setMultiSelectMode(false));
+
+document.getElementById('cardsWrap').addEventListener('blur', (e)=>{
+  if(e.target.classList && e.target.classList.contains('autogrow')){
+    autoGrowEl(e.target);
+  }
+}, true);
 
 document.getElementById('cardsWrap').addEventListener('paste', (e)=>{
   const target = e.target.closest ? e.target.closest('.richtext[contenteditable]') : null;
