@@ -261,7 +261,8 @@
   textarea.autogrow:focus{outline:none;}
   .period-cell textarea.classname{
     flex:none; min-width:0; font-size:calc(var(--course-font-size) - 2px); opacity:0.85;
-    padding-left:12px;
+    padding-left:16px;
+    height:16px !important; line-height:16px !important;
   }
   .period-cell textarea.course, .period-cell div.course{
     font-size:var(--course-font-size); font-family:'Fredoka',sans-serif;
@@ -529,7 +530,7 @@
   </span>
   <button class="tool-btn multiselect" id="multiSelectBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
-  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-18</span>
+  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-20</span>
 </div>
 
 <div id="stylePopSlot"></div>
@@ -1411,7 +1412,7 @@ document.getElementById('cardsWrap').addEventListener('keydown', (e)=>{
       course.focus();
       const range = document.createRange();
       range.selectNodeContents(course);
-      range.collapse(false);
+      range.collapse(true);
       const sel = window.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
