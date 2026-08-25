@@ -244,8 +244,8 @@
     display:flex; flex-direction:column; gap:2px; position:relative;
     min-height:64px;
   }
-  .period-cell > .color-dot{
-    position:absolute; top:2px; left:0; width:12px; height:12px;
+  .dot-name-row{
+    display:flex; align-items:center; gap:3px;
   }
   .color-dot{
     width:12px; height:12px; border-radius:50%; flex:none; cursor:pointer;
@@ -261,7 +261,7 @@
   textarea.autogrow:focus{outline:none;}
   .period-cell textarea.classname{
     flex:none; min-width:0; font-size:calc(var(--course-font-size) - 2px); opacity:0.85;
-    padding-left:16px;
+    padding-left:0;
     height:16px !important; line-height:16px !important;
   }
   .period-cell textarea.course, .period-cell div.course{
@@ -530,7 +530,7 @@
   </span>
   <button class="tool-btn multiselect" id="multiSelectBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
-  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-20</span>
+  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-21</span>
 </div>
 
 <div id="stylePopSlot"></div>
@@ -1016,8 +1016,10 @@ function periodRowHTML(card, n){
     const isSelected = multiSelected.has(cellKey);
     daysHTML += `
     <div class="period-cell ${multiSelectMode?'multiselectable':''} ${isSelected?'multi-selected':''}" data-cellkey="${cellKey}" style="background:${cell.color}; color:${cell.textColor||'#4A4258'};">
-      <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
-      <textarea class="classname autogrow" rows="1" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
+      <div class="dot-name-row">
+        <span class="color-dot" style="background:${cell.color}" data-role="cellstyle" data-card="${card.id}" data-period="${n}" data-day="${d}"></span>
+        <textarea class="classname autogrow" rows="1" style="font-weight:${classNameWeight}" data-role="classname" data-card="${card.id}" data-period="${n}" data-day="${d}">${escapeHTML(cell.className)}</textarea>
+      </div>
       <div class="course richtext" contenteditable="true" style="font-weight:${weight}" data-role="course" data-card="${card.id}" data-period="${n}" data-day="${d}">${cell.course||''}</div>
     </div>`;
   }
