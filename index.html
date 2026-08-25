@@ -530,7 +530,7 @@
   </span>
   <button class="tool-btn multiselect" id="multiSelectBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
-  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-21</span>
+  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-22</span>
 </div>
 
 <div id="stylePopSlot"></div>
@@ -1174,7 +1174,8 @@ function cardHTML(card){
     <div class="card-body" ${expanded ? '' : 'style="display:none;"'}>
       <div class="week-meta">
         <input class="week-label-input" type="text" placeholder="週次說明，例如：第1週 / 9/1-9/5" value="${escapeAttr(wlabel)}" data-role="weekLabel" data-card="${card.id}">
-        <input class="week-date-input" type="date" value="${card.weekStart||''}" data-role="weekStart" data-card="${card.id}" title="選擇週一日期可自動帶入日期區間">
+        <input class="week-date-input" type="date" value="${card.weekStart||''}" data-role="weekStart" data-card="${card.id}" title="點選任一天，會自動抓成當週的星期一">
+        <span style="font-size:11px; color:var(--ink-soft);">📅 點選日期會自動抓週一~五</span>
       </div>
 
       <div class="grid-scroll">
@@ -1508,7 +1509,19 @@ document.getElementById('cardsWrap').addEventListener('change', (e)=>{
 
   if(role === 'classroomTitle'){ card.classroomTitle = t.value; saveState(); return; }
   if(role === 'weekLabel'){ card.weekLabel = t.value; saveState(); return; }
-  if(role === 'weekStart'){ card.weekStart = t.value; card.weekLabel = weekRangeLabel(t.value); render(); saveState(); return; }
+  if(role === 'weekStart'){
+    let d = new Date(t.value + 'T00:00:00');
+    if(!isNaN(d)){
+      const dow = d.getDay(); // 0=Sun..6=Sat
+      const diffToMonday = dow === 0 ? -6 : (1 - dow); // snap back to this week's Monday
+      d.setDate(d.getDate() + diffToMonday);
+      card.weekStart = d.toISOString().slice(0,10);
+    }else{
+      card.weekStart = t.value;
+    }
+    card.weekLabel = weekRangeLabel(card.weekStart);
+    render(); saveState(); return;
+  }
   if(role === 'collabel'){ card.colLabels[t.dataset.key] = t.value; saveState(); return; }
   if(role === 'daylabel'){ card.days[Number(d)] = t.value; saveState(); return; }
   if(role === 'periodnum'){ card.periodNums[p] = t.value; saveState(); return; }
