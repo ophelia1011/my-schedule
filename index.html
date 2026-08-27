@@ -530,7 +530,7 @@
   </span>
   <button class="tool-btn multiselect" id="multiSelectBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
-  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-24</span>
+  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-25</span>
 </div>
 
 <div id="stylePopSlot"></div>
@@ -1857,13 +1857,33 @@ function doLogin(){
   const password = document.getElementById('loginPassword').value;
   if(!email || !password){ loginError.textContent = '請輸入 Email 與密碼'; return; }
   loginBtn.disabled = true;
-  loginError.textContent = '';
+  loginError.textContent = '登入中…';
+
+  const timeoutMs = 8000;
+  let settled = false;
+  const timeoutId = setTimeout(()=>{
+    if(settled) return;
+    settled = true;
+    loginError.textContent = '登入逾時，可能是網路或 Safari 隱私設定問題，請重新整理頁面後再試一次';
+    loginBtn.disabled = false;
+  }, timeoutMs);
+
   auth.signInWithEmailAndPassword(email, password)
+    .then(()=>{
+      settled = true;
+      clearTimeout(timeoutId);
+    })
     .catch(err=>{
+      if(settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
       loginError.textContent = '登入失敗，請確認帳號密碼是否正確';
       console.error(err);
     })
-    .finally(()=>{ loginBtn.disabled = false; });
+    .finally(()=>{
+      if(!settled) return;
+      loginBtn.disabled = false;
+    });
 }
 loginBtn.addEventListener('click', doLogin);
 document.getElementById('loginPassword').addEventListener('keydown', (e)=>{
