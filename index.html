@@ -276,9 +276,7 @@
     margin:0 !important; padding:0 !important; text-indent:0 !important;
   }
   .period-cell div.richtext[contenteditable]:focus{outline:none;}
-  .period-cell div.richtext[contenteditable]:empty:before{
-    content: attr(data-placeholder); opacity:0.45;
-  }
+  .period-cell div.course[contenteditable]:empty:before{ content:none !important; }
   .period-cell input:focus{outline:none;}
 
   /* ---------- Selection formatting mini toolbar ---------- */
@@ -530,7 +528,7 @@
   </span>
   <button class="tool-btn multiselect" id="multiSelectBtn">🎨 多選上色</button>
   <span class="save-status" id="saveStatus">尚未儲存</span>
-  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-08-24-26</span>
+  <span style="font-size:10.5px; color:#B0A8B9; margin-left:8px;">v2026-11-01-27</span>
 </div>
 
 <div id="stylePopSlot"></div>
@@ -757,6 +755,17 @@ function normalizeDayField(val){
 }
 
 function normalizeCard(c){
+  if(c.weekStart){
+    const _d = new Date(c.weekStart + 'T00:00:00');
+    if(!isNaN(_d)){
+      const _dow = _d.getDay();
+      _d.setDate(_d.getDate() + (_dow === 0 ? -6 : 1 - _dow));
+      const _ws = toLocalISODate(_d);
+      const _auto = !c.weekLabel || /^\d{1,2}\/\d{1,2}\s*-\s*\d{1,2}\/\d{1,2}$/.test(c.weekLabel.trim());
+      c.weekStart = _ws;
+      if(_auto) c.weekLabel = weekRangeLabel(_ws);
+    }
+  }
   c.notes = c.notes || {};
   c.notes.highlights = normalizeDayField(c.notes.highlights);
   c.notes.absentStudents = normalizeDayField(c.notes.absentStudents);
@@ -817,6 +826,8 @@ function normalizeCard(c){
           cell.course = escapeHTML(cell.course).replace(/\n/g,'<br>');
         }
         if(cell.course === undefined || cell.course === null) cell.course = '';
+        { const _t = String(cell.course).replace(/<br\s*\/?>/gi,'').replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').trim();
+          if(_t === '' || _t === '課程') cell.course = ''; }
       });
     });
   }
@@ -968,7 +979,8 @@ function addCard(){
     });
     if(ref.weekStart){
       const d = new Date(ref.weekStart + 'T00:00:00');
-      d.setDate(d.getDate()+7);
+      const _dw = d.getDay();
+      d.setDate(d.getDate() + (_dw === 0 ? -6 : 1 - _dw) + 7);
       c.weekStart = toLocalISODate(d);
       c.weekLabel = weekRangeLabel(c.weekStart);
     }
@@ -1216,13 +1228,19 @@ function isCurrentWeek(card){
   return now >= start && now <= end;
 }
 
+function targetMondayISO(){
+  const d = new Date(); d.setHours(0,0,0,0);
+  const dow = d.getDay(); // 0=Sun
+  d.setDate(d.getDate() + (dow === 0 ? 1 : 1 - dow)); // Sunday -> next Monday
+  return toLocalISODate(d);
+}
 function findCurrentCardId(){
-  const hit = cards.find(isCurrentWeek);
-  if(hit) return hit.id;
   const dated = cards.filter(c=>c.weekStart).sort((a,b)=>a.weekStart.localeCompare(b.weekStart));
   if(!dated.length) return cards[0] ? cards[0].id : null;
-  const today = todayISO();
-  const upcoming = dated.find(c=>c.weekStart >= today);
+  const target = targetMondayISO();
+  const exact = dated.find(c=>c.weekStart === target);
+  if(exact) return exact.id;
+  const upcoming = dated.find(c=>c.weekStart >= target);
   return upcoming ? upcoming.id : dated[dated.length-1].id;
 }
 
@@ -1270,6 +1288,8 @@ document.getElementById('jumpBtn').addEventListener('click', ()=>{
   const id = findCurrentCardId();
   if(!id){ showToast('目前還沒有已排定日期的課表'); return; }
   expandedIds.add(id);
+  const _c = getCard(id);
+  if(_c && _c.weekStart && _c.weekStart !== targetMondayISO()) showToast('還沒有這一週的課表，已跳到最接近的一週');
   render();
   setTimeout(()=>scrollToCard(id), 60);
 });
@@ -1441,6 +1461,7 @@ document.getElementById('cardsWrap').addEventListener('input', (e)=>{
   if(t.dataset && t.dataset.role === 'course'){
     const card = getCard(t.dataset.card);
     if(card){
+      if(!t.textContent.trim() && !t.querySelector('img')){ t.innerHTML = ''; }
       card.cells[t.dataset.period][t.dataset.day].course = t.innerHTML;
       debouncedSave();
     }
